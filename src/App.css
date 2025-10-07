@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+.card {
+    perspective: 1000px; /* ระยะห่างของมุมมอง 3D */
+}
+
+/* กำหนดคุณสมบัติพื้นฐานให้กับด้านหน้าและด้านหลัง */
+.card-side {
+    /* ทำให้ด้านหน้าและด้านหลังซ้อนทับกันอย่างสมบูรณ์ */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    
+    /* ซ่อนด้านที่หันออกไป (Backface Visibility) */
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden; 
+    
+    /* เพิ่ม Transition เพื่อให้การพลิกดูราบรื่น */
+    transition: transform 0.8s ease-in-out; 
+}
+
+/* ตั้งค่าเริ่มต้น: ด้านหน้าหันเข้า, ด้านหลังหันออกไป 180 องศา */
+.card-side.front {
+    transform: rotateY(0deg);
+}
+.card-side.back {
+    transform: rotateY(180deg); /* ซ่อนด้านหลังไว้ด้านหลัง */
+    padding: 20px; /* เพิ่ม padding ให้เนื้อหาด้านหลัง */
+}
+
+/* เมื่อ hover: ด้านหน้าหันออกไป 180 องศา, ด้านหลังหันเข้า 0 องศา */
+.card:hover .card-side.front {
+    transform: rotateY(-180deg); /* ใช้ -180 เพื่อให้พลิกไปในทิศทางเดียวกัน */
+}
+.card:hover .card-side.back {
+    transform: rotateY(0deg);
+}

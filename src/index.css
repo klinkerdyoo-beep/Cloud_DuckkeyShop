@@ -1,0 +1,15 @@
+/* ใช้กับทุกส่วนของเว็บไซต์ */
+body {
+  font-family: 'Lexend Mega', sans-serif;
+}
+
+/* หรือใช้กับหัวข้อ (Heading) ที่ต้องการความโดดเด่น */
+h1 {
+  font-family: 'Lexend Mega', sans-serif;
+  font-size: 3em; /* ปรับขนาดตามความเหมาะสม */
+}
+
+/* ตัวอย่างการใช้ร่วมกับฟอนต์อื่นสำหรับเนื้อหาปกติ */
+.content-text {
+  font-family: Arial, sans-serif; /* ใช้ฟอนต์อื่นสำหรับเนื้อหาปกติที่ยาว */
+}
