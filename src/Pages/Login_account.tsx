@@ -36,7 +36,7 @@ export default function Account(){
                             <input type="text" className='w-full outline-none px-2 border-2 max-w-sm' />
                         </div>
                         <div className='p-2 mt-5'>
-                            <h2 className='text-sm mb-2'>Chage Password</h2>
+                            <h2 className='text-sm mb-2'>Change Password</h2>
                             <input type="text" className='w-full outline-none px-2 border-2 max-w-sm' />
                         </div>                                
                     </div>

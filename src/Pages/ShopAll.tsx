@@ -1,13 +1,34 @@
-import { useState } from "react";
-import {Link} from 'react-router-dom'
-import Narbar from '../components/Narbar';
-import Filter from '../components/Filter';
-import Path from '../components/Path';
-import bg1 from '../assets/img/bg1.png';
+import { useState, useEffect } from "react";
+import Narbar from "../components/Narbar";
+import Filter from "../components/Filter";
+import Path from "../components/Path";
+import bg1 from "../assets/img/bg1.png";
 import product1  from '../assets/img/Strawberry_Hug_Toast.jpg'
 
+type Product = {
+  productid: string;
+  productname: string;
+  price: number;
+  description: string;
+  imgurl?: string;
+};
+
 export default function Shop() {
-//   const [filterOpen, setFilterOpen] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("http://localhost:3001/api/products")
+      .then((res) => res.json())
+      .then((data) => {
+        setProducts(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Error fetching products:", err);
+        setLoading(false);
+      });
+  }, []);
 
   return (
     <div
