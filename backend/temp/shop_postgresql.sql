@@ -139,3 +139,6 @@ CREATE TABLE IF NOT EXISTS paymentDetail (
 );
 
 COMMIT;
+
+-- generate this to django models.py, no need to add primary key. Also adjust the productList, productCategory and subCategory relationship. I want category-subCategory to be 1-to-many and productList-subCategory to be many-to-many.
+-- productList change name to productDetail, remove favoritesCount, add size (text null) and material (text null)

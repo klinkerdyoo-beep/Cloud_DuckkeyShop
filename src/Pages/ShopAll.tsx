@@ -3,32 +3,45 @@ import Narbar from "../components/Narbar";
 import Filter from "../components/Filter";
 import Path from "../components/Path";
 import bg1 from "../assets/img/bg1.png";
-import product1  from '../assets/img/Strawberry_Hug_Toast.jpg'
+import product1 from "../assets/img/Strawberry_Hug_Toast.jpg";
 
 type Product = {
-  productid: string;
-  productname: string;
+  productID: number;
+  productName: string;
   price: number;
   description: string;
-  imgurl?: string;
+  imgURL?: string;
 };
 
 export default function Shop() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // fetch from backend
   useEffect(() => {
-    fetch("http://localhost:3001/api/products")
-      .then((res) => res.json())
-      .then((data) => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch("http://localhost:3001/api/products/");
+        if (!res.ok) throw new Error("Failed to fetch products");
+        const data = await res.json();
         setProducts(data);
-        setLoading(false);
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error("Error fetching products:", err);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+    fetchProducts();
   }, []);
+
+  // loading
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-gray-100">
+        <p className="text-lg text-gray-700">Loading products...</p>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -48,60 +61,50 @@ export default function Shop() {
       <div className="flex">
         {/* Sidebar */}
         {/* <Filter open={filterOpen} setOpen={setFilterOpen} /> */}
-            <Filter/>            
-
+        <Filter />
 
         {/* เนื้อหาหลัก */}
-        <div
-          className="transition-all duration-500 flex-1 p-4"
-        >
+        <div className="transition-all duration-500 flex-1 p-4">
           <h1 className="text-2xl font-bold mb-4">Shop</h1>
           <p className="mb-6">Explore unique artworks and handcrafted pieces.</p>
 
           <div className="grid grid-cols-3 gap-3 px-10">
-            {/* product */}
-            <div className='box items-center shadow-4xl bg-white p-5 rounded-3xl max-w-sm  max-h-max group'>
-                <img className='mx-auto w-60 object-cover' src={product1 } alt="" />
-                <h2 className='text-black m-5 text-xl text-center '>Strawberry Hug Toast</h2>
-                <div className="max-h-0 overflow-hidden transition-all duration-1000 group-hover:max-h-96 w-full">
-                    <div className="border-2 mt-2 mb-2"></div>
-                    <p className='text-black text-sm'>Build a little sweetness into your day with the Strawberry Jam Toast Coaster!
-                                                This adorable ที่รองแก้วน้ำ brings a slice of happiness to your desk, dining table, or cozy coffee corner. Designed as a cute ขนมปังทาแยมสตรอว์เบอร์รี </p>
-                </div>
-                <div className="max-h-0 overflow-hidden transition-all duration-1100 group-hover:max-h-96 w-full">
-                    <div className="border-2 mt-2 mb-2 border-gray-500"></div>
-                    <p className='text-black text-sm'>price 50 bath</p>
-                </div>
-                <div className="max-h-0 overflow-hidden transition-all duration-1200 group-hover:max-h-96 w-full text-right">
-                    <div className="border-2 mt-2 mb-2 border-gray-500"></div>
-                    <p className='text-black text-sm'>see more details</p>
-                </div>
-            </div>
-            {/* product */}
-                        <div className='box items-center shadow-4xl bg-white p-5 rounded-3xl max-w-sm max-h-max group'>
-                <img className='mx-auto w-60 object-cover' src={product1 } alt="" />
-                <h2 className='text-black m-5 text-xl text-center '>Strawberry Hug Toast</h2>
-                <div className="max-h-0 overflow-hidden transition-all duration-1000 group-hover:max-h-96 w-full">
-                    <div className="border-2 mt-2 mb-2"></div>
-                    <p className='text-black text-sm'>Build a little sweetness into your day with the Strawberry Jam Toast Coaster!
-                                                This adorable ที่รองแก้วน้ำ brings a slice of happiness to your desk, dining table, or cozy coffee corner. Designed as a cute ขนมปังทาแยมสตรอว์เบอร์รี </p>
-                </div>
-                <div className="max-h-0 overflow-hidden transition-all duration-1100 group-hover:max-h-96 w-full">
-                    <div className="border-2 mt-2 mb-2 border-gray-500"></div>
-                    <p className='text-black text-sm'>price 50 bath</p>
-                </div>
-                <div className="max-h-0 overflow-hidden transition-all duration-1200 group-hover:max-h-96 w-full text-right">
-                    <div className="border-2 mt-2 mb-2 border-gray-500"></div>
-                    <p className='text-black text-sm'>see more details</p>
-                </div>
-            </div>
+            {products.map((product) => (
+              <div
+                key={product.productID}
+                className="box items-center shadow-4xl bg-white p-5 rounded-3xl max-w-sm max-h-max group"
+              >
+                <img
+                  className="mx-auto w-60 object-cover"
+                  src={`http://localhost:3001${product.imgURL}` || product1}
+                  alt={product.productName}
+                />
+                <h2 className="text-black m-5 text-xl text-center">{product.productName}</h2>
 
-            <div className="bg-amber-100 p-4 rounded-lg shadow">Artwork 2</div>
-            <div className="bg-amber-100 p-4 rounded-lg sha dow">Artwork 3</div>
-            <div className="bg-amber-100 p-4 rounded-lg shadow">Artwork 4</div>
-            <div className="bg-amber-100 p-4 rounded-lg shadow">Artwork 5</div>
-            <div className="bg-amber-100 p-4 rounded-lg shadow">Artwork 6</div>
+                <div className="max-h-0 overflow-hidden transition-all duration-1000 group-hover:max-h-96 w-full">
+                  <div className="border-2 mt-2 mb-2"></div>
+                  <p className="text-black text-sm">{product.description}</p>
+                </div>
+
+                <div className="max-h-0 overflow-hidden transition-all duration-1100 group-hover:max-h-96 w-full">
+                  <div className="border-2 mt-2 mb-2 border-gray-500"></div>
+                  <p className="text-black text-sm">price {product.price} bath</p>
+                </div>
+
+                <div className="max-h-0 overflow-hidden transition-all duration-1200 group-hover:max-h-96 w-full text-right">
+                  <div className="border-2 mt-2 mb-2 border-gray-500"></div>
+                  <p className="text-black text-sm">see more details</p>
+                </div>
+              </div>
+            ))}
           </div>
+
+          {/* no products */}
+          {products.length === 0 && (
+            <div className="text-center text-gray-500 mt-10">
+              No products available right now.
+            </div>
+          )}
         </div>
       </div>
     </div>
