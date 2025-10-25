@@ -3,7 +3,7 @@ import Narbar from "../components/Narbar";
 import Filter from "../components/Filter";
 import Path from "../components/Path";
 import bg1 from "../assets/img/bg1.png";
-import product1 from "../assets/img/Strawberry_Hug_Toast.jpg";
+import noIMG from "../assets/img/no-img-rec.png";
 
 type Product = {
   productID: number;
@@ -76,7 +76,7 @@ export default function Shop() {
               >
                 <img
                   className="mx-auto w-60 object-cover"
-                  src={`http://localhost:3001${product.imgURL}` || product1}
+                  src={`http://localhost:3001${product.imgURL}` || noIMG}
                   alt={product.productName}
                 />
                 <h2 className="text-black m-5 text-xl text-center">{product.productName}</h2>
