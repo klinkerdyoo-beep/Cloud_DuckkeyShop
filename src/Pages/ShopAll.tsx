@@ -5,13 +5,9 @@ import Path from "../components/Path";
 import bg1 from "../assets/img/bg1.png";
 import noIMG from "../assets/img/no-img-rec.png";
 
-type Product = {
-  productID: number;
-  productName: string;
-  price: number;
-  description: string;
-  imgURL?: string;
-};
+import { Link } from "react-router-dom";
+
+import type { Product } from "../types";
 
 export default function Shop() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -93,7 +89,12 @@ export default function Shop() {
 
                 <div className="max-h-0 overflow-hidden transition-all duration-1200 group-hover:max-h-96 w-full text-right">
                   <div className="border-2 mt-2 mb-2 border-gray-500"></div>
-                  <p className="text-black text-sm">see more details</p>
+                  <Link
+                    to={`/product/${product.productID}`}
+                    className="text-black text-sm hover:text-amber-500 transition"
+                  >
+                    see more detail
+                  </Link>
                 </div>
               </div>
             ))}

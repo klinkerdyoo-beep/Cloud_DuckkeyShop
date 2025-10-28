@@ -1,64 +1,111 @@
-import Path from '../components/Path'
-import Narbar from '../components/Narbar'
-import bg1 from '../assets/img/bg1.png'
-import Strawberry from '../assets/img/Strawberry_Hug_Toast.jpg'
-import {Link} from 'react-router-dom'
-export default function Login(){
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import Navbar from "../components/Narbar";
+import Path from "../components/Path";
+import bg1 from "../assets/img/bg1.png";
 
+import Loading from "./loading";
+import RandomProds from "../components/randomProds";
+
+import type { Product } from "../types";
+
+export default function ProductPage() {
+  const { id } = useParams<{ id: string }>();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [quantities, setquantities] = useState(1);
+
+  useEffect(() => {
+    fetch(`http://localhost:3001/api/products/${id}`)
+      .then((res) => res.json())
+      .then(setProduct)
+      .catch(console.error);
+  }, [id]);
+
+
+  if (!product) {
     return (
-        <div className='text-black'>
-            <div
-            style={{ backgroundImage: `url(${bg1})` }}
-            className="bg-cover bg-fixed bg-center min-h-screen"
-            >
-                <Narbar />
-                <Path />
-                <div className='flex justify-center h-full text-black'>
-                    <div className='grid grid-cols-2 gap-4 bg-white/90 px-10'>
-                        <div className='w-90'>
-                            <img src={Strawberry} alt="" />
-                        </div>  
-                        <div>
-                            <h2 className=' m-5 text-2xl text-center'>Strawberry Hug Toast</h2>
-                            <h2 className='text-red-800 text-xl'>444 bath</h2>
-                            <h3 className='mt-2'>Quantity</h3>
-                            <div>
-                                <div className='p-5 border-1'></div>
-                            </div>
-                            <button className=' mt-3 p-3 rounded-xl bg-red-800 text-sm text-white'>Add to cart</button>
-                            <p className='mt-3 text-black max-w-sm'>Build a little sweetness into your day with the Strawberry Jam Toast Coaster!
-                                This adorable ที่รองแก้วน้ำ brings a slice of happiness to your desk, dining table, or cozy coffee corner. Designed as a cute ขนมปังทาแยมสตรอว์เบอร์รี </p>
-                            <h3 className='mt-2 font-bold text-red-800'>Approximate size: </h3>
-                            <h3 className='mt-2 font-bold text-red-800'>Material: </h3>
+      <Loading />
+    );
+  }
 
-                        </div>                  
-                    </div>
+  // const { addToCart } = useCart();
+  const handleAddToCart = async () => {
+  const email = "alice@example.com";
+  const body = { email, productID: product?.productID, quantities: quantities, customValue: "" };
 
-                </div>
+  const res = await fetch("http://localhost:3001/api/cart/add", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
 
-                <div className="p-10 py-10 justify-center bg-white/90 items-center w-full text-center">
-                    <h1>Art Shop</h1>
-                    <p>
-                    Explore original paintings, sculptures, and handcrafted art pieces for your collection.
-                    </p>
+  const data = await res.json();
+  if (data.success) alert(`Added ${quantities} of ${product?.productName} to cart`);
+};
 
-                </div>
-                <div className=" p-5 py-5 grid grid-cols-3 justify-center bg-white">
-                    <div className='card relative w-full h-[400px] max-w-sm mx-auto'>
-                        <div className='card-side front box shadow-4xl bg-white border-blue-500 border-20  rounded-3xl overflow-hidden'>
-                        <div className='h-auto'><img src={Strawberry} alt="" /></div>
-                        </div>
-                            
-                        <div className='card-side back box shadow-4xl bg-white border-blue-500 border-20  rounded-3xl max-w-sm overflow-scroll'>
-                        <h2 className='text-black m-5 text-xl text-center '>Strawberry Hug Toast</h2>
-                        <p className='text-black'>Build a little sweetness into your day with the Strawberry Jam Toast Coaster!
-                                                    This adorable ที่รองแก้วน้ำ brings a slice of happiness to your desk, dining table, or cozy coffee corner. Designed as a cute ขนมปังทาแยมสตรอว์เบอร์รี </p>
-                        <div className='button bg-amber-200 border-2 rounded-2xl p-1 max-w-max'><Link to='/Product'>detail</Link></div>
-                        </div>
-                    </div>
-                </div>
+
+  return (
+    <div
+      style={{ backgroundImage: `url(${bg1})` }}
+      className="bg-cover bg-fixed bg-center min-h-screen text-black"
+    >
+      <Navbar />
+      <Path />
+
+      <div className="flex justify-center h-full text-black">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white/90 p-10 rounded-xl">
+          <div className="w-90">
+            <img
+              src={`http://localhost:3001${product.imgURL || ""}`}
+              alt={product.productName}
+              className="rounded-lg shadow-lg"
+            />
+          </div>
+          <div>
+            <h2 className="m-5 text-2xl text-center">{product.productName}</h2>
+            <h2 className="text-red-800 text-xl mb-3">{product.price} ฿</h2>
+
+            <div className="flex items-center gap-3 mb-3">
+              <button
+                onClick={() => setquantities((q) => Math.max(1, q - 1))}
+                className="bg-gray-300 hover:bg-amber-500 px-3 rounded"
+              >
+                -
+              </button>
+              <span>{quantities}</span>
+              <button
+                onClick={() => setquantities((q) => q + 1)}
+                className="bg-gray-300 hover:bg-amber-500 px-3 rounded"
+              >
+                +
+              </button>
             </div>
-        </div>
-  );
 
-} 
+            <button
+              onClick={handleAddToCart}
+              className="mt-3 p-3 rounded-xl bg-red-800 hover:bg-red-500 text-sm text-white"
+            >
+              Add to cart
+            </button>
+
+            <p className="mt-3 text-black max-w-sm">{product.description}</p>
+            <h3 className="mt-2 font-bold text-red-800">
+              Approximate size: {product.size || "-"}
+            </h3>
+            <h3 className="mt-2 font-bold text-red-800">
+              Material: {product.material || "-"}
+            </h3>
+          </div>
+        </div>
+      </div>
+
+        <div className="p-10 py-10 justify-center bg-white/90 items-center w-full text-center">
+            <h1>Art Shop</h1>
+            <p>
+            Explore original paintings, sculptures, and handcrafted art pieces for your collection.
+            </p>
+        </div>
+        <RandomProds />
+    </div>
+  );
+}

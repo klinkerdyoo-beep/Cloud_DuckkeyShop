@@ -29,9 +29,9 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
 
-        <Route path="/Shop" element={<ShopPage />} />
+        <Route path="/Product" element={<ShopPage />} />
 
-        <Route path="/Product" element={<ProductPage />} />
+        <Route path="/Product/:id" element={<ProductPage />} />
 
         <Route path="/LoginChageAddress" element={<LoginChageAddressPage />} />
 

@@ -21,7 +21,7 @@ export default function Navbar() {
         {/* Menu Links (Desktop) */}
         <ul className="hidden md:flex items-center gap-6">
           <li><Link to="/" className="hover:text-amber-500 transition">Home</Link></li>
-          <li><Link to="/Shop" className="hover:text-amber-500 transition">Shop All</Link></li>
+          <li><Link to="/Product" className="hover:text-amber-500 transition">Shop All</Link></li>
           <li><Link to="/CustomizeKeycap" className="hover:text-amber-500 transition">Customize Keycap</Link></li>
 
           {/* Dropdown Contact */}
@@ -46,17 +46,58 @@ export default function Navbar() {
             <button className="ml-2 px-3 py-1 bg-amber-950 text-white rounded hover:bg-blue-400 transition">Go</button>
           </div>
 
+          {/* Cart */}
           <Link to="/Cart" className="text-gray-600 hover:text-amber-500 transition">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
             </svg>
           </Link>
 
-          <Link to="/LoginAddress" className="text-gray-600 hover:text-amber-500 transition">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-            </svg>
-          </Link>
+          {/* Profile Icon */}
+          <li className="relative group cursor-pointer">
+            <Link
+              to="/LoginAccount"
+              className="flex items-center text-gray-600 hover:text-amber-500 transition"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                ></path>
+              </svg>
+            </Link>
+            {/* Dropdown */}
+            <ul className="absolute left-0 top-full mt-2 w-40 bg-white border rounded-lg shadow-lg opacity-0 max-h-0 overflow-hidden transition-all duration-300 group-hover:opacity-100 group-hover:max-h-96">
+              <li className="p-2 hover:bg-amber-100 rounded">
+                <Link to="/LoginAccount">
+                  Account
+                </Link>
+              </li>
+              <li className="p-2 hover:bg-amber-100 rounded">
+                <Link to="/LoginAddress">
+                  Address
+                </Link>
+              </li>
+              <li className="p-2 hover:bg-amber-100 rounded">
+                <Link to="/LoginOrderHistory">
+                  History
+                </Link>
+              </li>
+              <li className="p-2 hover:bg-amber-100 rounded">
+                <Link to="/admin/OrderList">
+                  Admin
+                </Link>
+              </li>
+            </ul>
+          </li>
+
 
           {/* Hamburger Menu (Mobile) */}
           <button className="md:hidden p-2" onClick={() => setMenuOpen(!menuOpen)}>

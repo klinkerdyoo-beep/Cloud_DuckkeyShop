@@ -33,11 +33,36 @@ export default function AdminHeader({ activePage }: AdminHeaderProps) {
         </div>
 
         <div className="flex items-center">
-          <img
-            alt="Admin Icon"
-            className="h-12 w-12 rounded-full"
-            src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Bucephala-albeola-010.jpg/500px-Bucephala-albeola-010.jpg"
-          />
+          {/* Profile Icon */}
+          <li className="relative group cursor-pointer">
+            <Link
+              to="/LoginAccount"
+              className="flex items-center text-gray-600 hover:text-amber-500 transition"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                ></path>
+              </svg>
+            </Link>
+            {/* Dropdown */}
+            <ul className="absolute right-0 top-full mt-2 w-40 bg-white border rounded-lg shadow-lg opacity-0 max-h-0 overflow-hidden transition-all duration-300 group-hover:opacity-100 group-hover:max-h-96">
+
+              <li className="p-2 hover:bg-amber-100 rounded">
+                <Link to="/">
+                  Homepage
+                </Link>
+              </li>
+            </ul>
+          </li>
         </div>
       </div>
     </header>

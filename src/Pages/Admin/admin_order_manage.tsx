@@ -10,7 +10,7 @@ const mockOrder = {
   customerName: "เพลงจ้า",
   email: "66070059@kmitl.ac.th",
   productName: "Strawberry Hug Toast",
-  quantity: "2 ชิ้น",
+  quantities: "2 ชิ้น",
   totalPrice: "120 บาท",
   transferSlip:
     "https://thunder.in.th/wp-content/uploads/2024/06/%E0%B8%AA%E0%B8%A5%E0%B8%B4%E0%B8%9B%E0%B9%82%E0%B8%AD%E0%B8%99%E0%B9%80%E0%B8%87%E0%B8%B4%E0%B8%99.webp",
@@ -80,7 +80,7 @@ export default function AdminOrderManage() {
                 <label className="block mb-1 font-medium">รายการสินค้า</label>
                 <input
                   type="text"
-                  value={`${order.productName} (${order.quantity})`}
+                  value={`${order.productName} (${order.quantities})`}
                   readOnly
                   className="w-full px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-800 dark:text-gray-300"
                 />
