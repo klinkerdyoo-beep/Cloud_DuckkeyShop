@@ -14,6 +14,8 @@ import CartPage from './Pages/Cart';
 import Cart2Page from './Pages/Cart2';
 import CheckoutPage from './Pages/Checkout';
 import CustomProductPage from './Pages/CustomizeKeycap';
+import SingInPage from './Pages/SignIn';
+import SingUpPage from './Pages/SignUp';
 // ... นำเข้ารูปภาพต่างๆ ที่ใช้ร่วมกัน ...
 
 function App() {
@@ -42,6 +44,10 @@ function App() {
         <Route path="/LoginOrderHistory" element={<LoginOrderHistoryPage />} />
 
         <Route path="/CustomizeKeycap" element={<CustomProductPage />} />
+
+        <Route path="/login" element={<SingInPage />} />
+
+        <Route path="/singup" element={<SingUpPage />} />
 
         <Route path="*" element={<h1>404 Not Found</h1>} />
       </Routes>
