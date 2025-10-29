@@ -1,43 +1,70 @@
 import { useState } from "react";
 import Navbar from "../components/Narbar";
 import Path from "../components/Path";
-import bg1 from '../assets/img/bg1.png'
-import keycapImg from "../assets/img/Strawberry_Hug_Toast.jpg"; // รูปตัวอย่าง Keycap
+import bg1 from "../assets/img/bg1.png";
+import keycapImg from "../assets/img/Strawberry_Hug_Toast.jpg";
+import { useCart } from "../hooks/useCart";
 
 export default function CustomKeycap() {
   const [profile, setProfile] = useState("");
   const [keyColor, setKeyColor] = useState("");
   const [textColor, setTextColor] = useState("");
   const [customText, setCustomText] = useState("");
-  const [additionalNotes, setAdditionalNotes] = useState("");
+  const [notes, setnotes] = useState("");
 
+  const { addCustomProductToCart } = useCart();
 
-  const handleAddToCart = () => {
-    alert(`Added to cart with options:
-Profile: ${profile}
-Key Color: ${keyColor}
-Text Color: ${textColor}
-Custom Text: ${customText}`);
-    // TODO: ส่งข้อมูลไป Cart / Backend
+  const handleAddToCart = async () => {
+    if (!profile) {
+      alert("Please select profile");
+      return;
+    }
+    else if (keyColor == textColor) {
+      alert("Key Color and Text Color can't be the same");
+      return;
+    }
+    else if (keyColor == "") {
+      setKeyColor("#000000");
+    }
+    else if (textColor  == "") {
+      setTextColor("#000000");
+    }
+
+    const customData = {
+      profile,
+      keyColor,
+      textColor,
+      customText,
+      notes,
+      customImage: null,
+    };
+
+    try {
+      const newId = await addCustomProductToCart(customData);
+      alert(`Custom keycap added to cart! (ID: ${newId})`);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to add custom keycap");
+    }
   };
 
   return (
-      <div
-          style={{ backgroundImage: `url(${bg1})` }}
-          className="bg-cover bg-fixed bg-center min-h-screen"
-        >
+    <div
+      style={{ backgroundImage: `url(${bg1})` }}
+      className="bg-cover bg-fixed bg-center min-h-screen"
+    >
       <Navbar />
       <Path />
 
       <div className="p-10 py-10 justify-center bg-white/90 items-center w-full text-center">
         <h1>Customize Your Keycap</h1>
         <p>
-          Create a keycap that reflects your style. Pick your favorite colors, add text, and bring your dream keycap to life!
+          Create a keycap that reflects your style. Pick your favorite colors,
+          add text, and bring your dream keycap to life!
         </p>
       </div>
 
       <div className="max-w-4xl mx-auto p-10 bg-white rounded-xl shadow mt-10">
-
         <div className="flex flex-col md:flex-row gap-10">
           {/* รูป Keycap */}
           <div className="flex-1 flex justify-center items-center">
@@ -92,16 +119,15 @@ Custom Text: ${customText}`);
                 onChange={(e) => setCustomText(e.target.value)}
                 placeholder="Enter text on keycap"
                 className="mt-2 p-2 border rounded"
-                maxLength={2} // กำหนดความยาว text บน keycap
+                maxLength={2}
               />
             </label>
 
-            {/* Additional Notes */}
             <label className="flex flex-col">
               Additional Notes:
               <textarea
-                value={additionalNotes}
-                onChange={(e) => setAdditionalNotes(e.target.value)}
+                value={notes}
+                onChange={(e) => setnotes(e.target.value)}
                 placeholder="Any special instructions for your keycap..."
                 className="mt-2 p-2 border rounded resize-none"
                 rows={4}

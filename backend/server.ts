@@ -178,13 +178,28 @@ app.post("/api/cart/update", async (req, res) => {
   try {
     const { email, productID, customValue = "", quantities } = req.body;
 
-    await pool.query(
-      `UPDATE main_customercart
-       SET quantities = $1
-       WHERE email_id=$2 AND product_id=$3 AND "customValue"=$4`,
-      [quantities, email, productID, customValue]
-    );
+    let query: string;
+    let params: any[];
 
+    if (customValue) {
+      // custom product
+      query = `
+        UPDATE main_customercart
+        SET quantities = $1
+        WHERE email_id=$2 AND custom_product_id=$3 AND "customValue"=$4
+      `;
+      params = [quantities, email, productID, customValue];
+    } else {
+      // normal product
+      query = `
+        UPDATE main_customercart
+        SET quantities = $1
+        WHERE email_id = $2 AND product_id = $3 AND ("customValue" IS NULL OR "customValue" = '')
+      `;
+      params = [quantities, email, productID];
+    }
+
+    await pool.query(query, params);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -192,23 +207,95 @@ app.post("/api/cart/update", async (req, res) => {
   }
 });
 
+
 // Remove from cart
 app.post("/api/cart/remove", async (req, res) => {
   try {
     const { email, productID, customValue = "" } = req.body;
 
-    await pool.query(
-      `DELETE FROM main_customercart
-       WHERE email_id=$1 AND product_id=$2 AND "customValue"=$3`,
-      [email, productID, customValue]
-    );
+    let query: string;
+    let params: any[];
 
+    if (customValue) {
+      // custom product
+      query = `
+        DELETE FROM main_customercart
+        WHERE email_id=$1 AND custom_product_id=$2 AND "customValue"=$3
+      `;
+      params = [email, productID, customValue];
+    } else {
+      // normal product
+      query = `
+        DELETE FROM main_customercart
+        WHERE email_id=$1 AND product_id=$2 AND ("customValue" IS NULL OR "customValue" = '')
+      `;
+      params = [email, productID];
+    }
+
+    await pool.query(query, params);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to remove from cart" });
   }
 });
+
+
+
+const customStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, "uploads/custom_products"),
+  filename: (req, file, cb) =>
+    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}-${file.originalname}`),
+});
+const uploadCustom = multer({ storage: customStorage });
+
+app.post("/api/cart/add-custom", uploadCustom.single("customImage"), async (req, res) => {
+  try {
+    const { userEmail, profile, keyColor, textColor, customText, notes } = req.body;
+
+    // Image, just in case na
+    const imagePath = req.file ? `/uploads/custom_products/${req.file.filename}` : "";
+
+    // Get price from main_productdetail
+    const priceRes = await pool.query(
+      `SELECT price FROM main_productdetail WHERE "productID"='CUSTOM' LIMIT 1`
+    );
+    const customPrice = priceRes.rows[0]?.price ?? 0;
+
+    // Insert to main_customproduct
+    const result = await pool.query(
+      `INSERT INTO main_customproduct 
+        (user_id, profile, "keyColor", "textColor", "customText", notes, "customImage", price)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING id`,
+      [userEmail, profile, keyColor, textColor, customText, notes, imagePath, customPrice]
+    );
+
+    const newCustomId = result.rows[0].id;
+
+    // Add to cart
+    await pool.query(
+      `INSERT INTO main_customercart 
+        (email_id, product_id, quantities, custom_product_id, "customValue")
+       VALUES ($1, $2, $3, $4, $5)`,
+      [userEmail, "CUSTOM", 1, newCustomId, `${profile}_${keyColor}_${textColor}_${customText}`]
+    );
+
+    res.json({
+      success: true,
+      id: newCustomId,
+      imagePath,
+      price: customPrice,
+      product_id: "CUSTOM",
+      customValue: `${profile}-${keyColor}-${textColor}-${customText}`,
+    });
+  } catch (err) {
+    console.error("Error in /api/cart/add-custom:", err);
+    res.status(500).json({ error: "Failed to create custom keycap" });
+  }
+});
+
+
 
 
 // Upload product

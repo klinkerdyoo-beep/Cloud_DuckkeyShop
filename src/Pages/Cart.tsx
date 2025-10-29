@@ -42,7 +42,16 @@ export default function CartPage() {
                 className="w-24 h-24 object-cover rounded border"
               />
               <div className="flex-1 ml-4 text-left">
-                <Link to={`/product/${item.product_id}`}><h2 className="text-red-700 font-semibold">{item.productName}</h2></Link>
+                {item.custom_product_id ? (
+                  <h2 className="text-red-700 font-semibold">
+                    {item.productName}: {item.customValue}
+                  </h2>
+                ) : (
+                  <Link to={`/product/${item.product_id}`}>
+                    <h2 className="text-red-700 font-semibold">{item.productName}</h2>
+                  </Link>
+                )}
+
                 <p className="text-gray-700">
                   Price: ฿{item.price.toLocaleString("en-US")}
                 </p>
@@ -54,7 +63,7 @@ export default function CartPage() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() =>
-                    updatequantities(item.custom_product_id ?? item.product_id, item.quantities - 1, item.customValue)
+                    updatequantities(item, item.quantities - 1)
                   }
                   className="text-black text-xl border px-2 rounded"
                 >
@@ -63,7 +72,7 @@ export default function CartPage() {
                 <span>{item.quantities}</span>
                 <button
                   onClick={() =>
-                    updatequantities(item.custom_product_id ?? item.product_id, item.quantities + 1, item.customValue)
+                    updatequantities(item, item.quantities + 1)
                   }
                   className="text-black text-xl border px-2 rounded"
                 >
@@ -72,7 +81,7 @@ export default function CartPage() {
               </div>
 
               <button
-                onClick={() => removeFromCart(item.custom_product_id ?? item.product_id, item.customValue)}
+                onClick={() => removeFromCart(item)}
                 className="ml-4 text-red-600 hover:text-red-800"
               >
                 ✕

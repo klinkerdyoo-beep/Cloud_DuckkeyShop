@@ -84,7 +84,13 @@ export function useCart() {
     return data.id;
   };
 
-  const updatequantities = async (id: string, qty: number, customValue: string = "") => {
+  const updatequantities = async (
+    item: CartItem,
+    qty: number
+  ) => {
+    const id = item.custom_product_id ?? item.product_id;
+    const customValue = item.custom_product_id ? item.customValue : "";
+
     await fetch("http://localhost:3001/api/cart/update", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -92,15 +98,22 @@ export function useCart() {
     });
 
     setCart((prev) =>
-      prev.map((p) =>
-        p.product_id === id && p.customValue === customValue
-          ? { ...p, quantities: Math.max(1, qty) }
-          : p
-      )
+      prev.map((p) => {
+        const matchId = p.custom_product_id ?? p.product_id;
+        const matchCustom = p.custom_product_id ? p.customValue : "";
+        if (matchId === id && matchCustom === customValue) {
+          return { ...p, quantities: Math.max(1, qty) };
+        }
+        return p;
+      })
     );
   };
 
-  const removeFromCart = async (id: string, customValue: string = "") => {
+
+  const removeFromCart = async (item: CartItem) => {
+    const id = item.custom_product_id ?? item.product_id;
+    const customValue = item.custom_product_id ? item.customValue : "";
+
     await fetch("http://localhost:3001/api/cart/remove", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -108,7 +121,11 @@ export function useCart() {
     });
 
     setCart((prev) =>
-      prev.filter((p) => !(p.product_id === id && p.customValue === customValue))
+      prev.filter((p) => {
+        const matchId = p.custom_product_id ?? p.product_id;
+        const matchCustom = p.custom_product_id ? p.customValue : "";
+        return !(matchId === id && matchCustom === customValue);
+      })
     );
   };
 
@@ -119,7 +136,7 @@ export function useCart() {
   return {
     cart,
     addToCart,
-    addCustomProductToCart, // 👈 new export
+    addCustomProductToCart,
     updatequantities,
     removeFromCart,
     clearCart,
