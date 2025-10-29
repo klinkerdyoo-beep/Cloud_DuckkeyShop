@@ -44,6 +44,7 @@ const query_products = `
         WHERE product_id = p."productID"
         LIMIT 1
       ) pi ON true
+      WHERE p."productID" NOT LIKE '%CUSTOM%'
       GROUP BY p."productID", pi."imgURL", c."categoryName"
     `
 
