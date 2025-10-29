@@ -259,7 +259,7 @@ app.post("/api/cart/add-custom", uploadCustom.single("customImage"), async (req,
 
     // Get price from main_productdetail
     const priceRes = await pool.query(
-      `SELECT price FROM main_productdetail WHERE "productID"='CUSTOM' LIMIT 1`
+      `SELECT price FROM main_productdetail WHERE "productID"='KC_CUSTOM' LIMIT 1`
     );
     const customPrice = priceRes.rows[0]?.price ?? 0;
 
@@ -279,7 +279,7 @@ app.post("/api/cart/add-custom", uploadCustom.single("customImage"), async (req,
       `INSERT INTO main_customercart 
         (email_id, product_id, quantities, custom_product_id, "customValue")
        VALUES ($1, $2, $3, $4, $5)`,
-      [userEmail, "CUSTOM", 1, newCustomId, `${profile}_${keyColor}_${textColor}_${customText}`]
+      [userEmail, "KC_CUSTOM", 1, newCustomId, `${profile}_${keyColor}_${textColor}_${customText}`]
     );
 
     res.json({
@@ -287,7 +287,7 @@ app.post("/api/cart/add-custom", uploadCustom.single("customImage"), async (req,
       id: newCustomId,
       imagePath,
       price: customPrice,
-      product_id: "CUSTOM",
+      product_id: "KC_CUSTOM",
       customValue: `${profile}-${keyColor}-${textColor}-${customText}`,
     });
   } catch (err) {

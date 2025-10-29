@@ -2,8 +2,13 @@ import { useState } from "react";
 import Navbar from "../components/Narbar";
 import Path from "../components/Path";
 import bg1 from "../assets/img/bg1.png";
-import keycapImg from "../assets/img/Strawberry_Hug_Toast.jpg";
 import { useCart } from "../hooks/useCart";
+
+import noImg from "../assets/img/no-img-rec.png";
+import OEMImg from "../assets/img/KC_CUSTOM/OEM.png";
+import CherryImg from "../assets/img/KC_CUSTOM/Cherry.png";
+import SAImg from "../assets/img/KC_CUSTOM/SA.png";
+
 
 export default function CustomKeycap() {
   const [profile, setProfile] = useState("");
@@ -47,6 +52,19 @@ export default function CustomKeycap() {
       alert("Failed to add custom keycap");
     }
   };
+
+  const keycapImg = (() => {
+    switch (profile) {
+      case "OEM":
+        return OEMImg;
+      case "Cherry":
+        return CherryImg;
+      case "SA":
+        return SAImg;
+      default:
+        return noImg;
+    }
+  })();
 
   return (
     <div
