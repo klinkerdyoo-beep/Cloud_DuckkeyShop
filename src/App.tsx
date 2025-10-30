@@ -6,6 +6,7 @@ import HomePage from './Pages/Home';
 import ShopPage from './Pages/ShopAll';
 import ProductPage from './Pages/Product';
 import LoginChageAddressPage from './Pages/Login_chage_address';
+import LoginAddAddressPage from './Pages/Login_add_address';
 import LoginOrderHistoryPage from './Pages/Login_OrderHistory';
 import LoginAddressPage from './Pages/Login_address';
 import LoginAccountPage from './Pages/Login_account';
@@ -33,7 +34,8 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/Product" element={<ShopPage />} />
           <Route path="/Product/:id" element={<ProductPage />} />
-          <Route path="/LoginChageAddress" element={<LoginChageAddressPage />} />
+          <Route path="/LoginChangeAddress/:id" element={<LoginChageAddressPage />} />
+          <Route path="/LoginAddAddress" element={<LoginAddAddressPage />} />
           <Route path="/LoginAddress" element={<LoginAddressPage />} />
           <Route path="/Cart" element={<CartPage />} />
           <Route path="/Cart2" element={<Cart2Page />} />

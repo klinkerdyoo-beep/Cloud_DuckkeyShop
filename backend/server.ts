@@ -760,22 +760,296 @@ app.put("/api/orders/:id", async (req, res) => {
   }
 });
 
+app.get("/api/orderhistory", requireLogin, async (req: Request, res: Response) => {
+  try {
+    const userEmail =
+      typeof req.session.user === "string"
+        ? req.session.user
+        : req.session.user?.email;
 
-// Upload product
-// app.post("/api/upload/product", uploadProduct.single("image"), (req, res) => {
-//   if (!req.file) {
-//     return res.status(400).json({ error: "No file uploaded" });
-//   }
-//   const imageUrl = `/uploads/products/${req.file.filename}`;
-//   res.json({ message: "Product image uploaded", imageUrl });
-// });
-// app.post("/api/upload/slip", uploadSlip.single("slip"), (req, res) => {
-//   if (!req.file) {
-//     return res.status(400).json({ error: "No slip uploaded" });
-//   }
-//   const slipUrl = `/uploads/slips/${req.file.filename}`;
-//   res.json({ message: "Slip uploaded", slipUrl });
-// });
+    if (!userEmail) {
+      return res.status(401).json({ message: "User not logged in" });
+    }
+
+    const query = `
+      SELECT 
+        o.id AS order_id,
+        o."orderDate",
+        o."orderStatus",
+        o."totalPrice",
+        o.name,
+        o.phone,
+        o.address,
+        o.email_id,
+        i.id AS orderitem_id,
+        i."customValue",
+        i."quantities",
+        i."eachTotalPrice",
+        i."productName",
+        i."product_id",
+        i."custom_product_id",
+        COALESCE(i."custom_product_id"::text, i."product_id") AS final_product_id,
+        img."imgURL"
+      FROM main_order o
+      LEFT JOIN main_orderitem i ON o.id = i."order_id"
+      LEFT JOIN main_productimage img 
+        ON img."product_id" = COALESCE(i."custom_product_id"::text, i."product_id")
+      WHERE o."email_id" = $1
+      ORDER BY o."orderDate" DESC;
+    `;
+
+    const result = await pool.query(query, [userEmail]);
+
+    // Group by order
+    const ordersMap: Record<string, any> = {};
+
+    result.rows.forEach((row) => {
+      if (!ordersMap[row.order_id]) {
+        ordersMap[row.order_id] = {
+          id: row.order_id,
+          orderDate: row.orderDate,
+          orderStatus: row.orderStatus,
+          totalPrice: row.totalPrice,
+          name: row.name,
+          phone: row.phone,
+          address: row.address,
+          email_id: row.email_id,
+          items: [],
+        };
+      }
+
+      if (row.orderitem_id) {
+        ordersMap[row.order_id].items.push({
+          id: row.orderitem_id,
+          productName: row.productName,
+          quantities: row.quantities,
+          eachTotalPrice: row.eachTotalPrice,
+          imgURL: row.imgURL,
+          product_id: row.final_product_id,
+        });
+      }
+    });
+
+    const orders = Object.values(ordersMap);
+    res.json(orders);
+  } catch (err) {
+    console.error("Error fetching orders:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+app.get("/api/user/addresses", requireLogin, async (req, res) => {
+  const sessionUser = req.session.user;
+
+  // Ensure sessionUser is an object with email
+  const userEmail = typeof sessionUser === "string" ? sessionUser : sessionUser?.email;
+
+  if (!userEmail) {
+    return res.status(400).json({ error: "Email is required" });
+  }
+
+  try {
+    const query = `
+      SELECT 
+        id, name, phone, province, district, subdistrict, postal_code, address, is_default
+      FROM main_useraddress
+      WHERE email_id = $1
+      ORDER BY is_default DESC, id ASC
+    `;
+    const { rows } = await pool.query(query, [userEmail]);
+
+    return res.json(rows);
+  } catch (err) {
+    console.error("Error fetching addresses:", err);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.put("/api/user/addresses/:id/default", requireLogin, async (req, res) => {
+  const sessionUser = req.session.user;
+  const userEmail = typeof sessionUser === "string" ? sessionUser : sessionUser?.email;
+  const addrId = Number(req.params.id);
+
+  if (!userEmail || !addrId) {
+    return res.status(400).json({ error: "Email and Address ID are required" });
+  }
+
+  try {
+    // Begin transaction
+    await pool.query("BEGIN");
+
+    // Reset all other addresses for this user
+    await pool.query(
+      `UPDATE main_useraddress
+       SET is_default = FALSE
+       WHERE email_id = $1`,
+      [userEmail]
+    );
+
+    // Set this address as default
+    await pool.query(
+      `UPDATE main_useraddress
+       SET is_default = TRUE
+       WHERE id = $1 AND email_id = $2`,
+      [addrId, userEmail]
+    );
+
+    await pool.query("COMMIT");
+
+    return res.json({ success: true });
+  } catch (err) {
+    await pool.query("ROLLBACK");
+    console.error("Error setting default address:", err);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
+app.get("/api/user/address", requireLogin, async (req, res) => {
+  try {
+  const sessionUser = req.session.user;
+  const userEmail = typeof sessionUser === "string" ? sessionUser : sessionUser?.email;
+
+    if (!userEmail) {
+      return res.status(400).json({ error: "Missing email" });
+    }
+
+    const query = `
+      SELECT 
+        name, 
+        phone, 
+        province, 
+        district, 
+        subdistrict, 
+        postal_code, 
+        address
+      FROM main_useraddress 
+      WHERE email_id = $1
+    `;
+
+    const result = await pool.query(query, [userEmail]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Error fetching user address:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.post("/api/user/addresses", requireLogin, async (req, res) => {
+  try {
+    const sessionUser = req.session.user;
+    const userEmail = typeof sessionUser === "string" ? sessionUser : sessionUser?.email;
+
+    if (!userEmail) {
+      return res.status(400).json({ error: "Email is required" });
+    }
+
+    const { name, phone, province, district, subdistrict, postal_code, address } = req.body;
+
+    const query = `
+      INSERT INTO main_useraddress
+      (email_id, name, phone, province, district, subdistrict, postal_code, address, is_default)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, false)
+      RETURNING *
+    `;
+
+    const result = await pool.query(query, [
+      userEmail,
+      name,
+      phone,
+      province,
+      district,
+      subdistrict,
+      postal_code,
+      address,
+    ]);
+
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error("Error creating address:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.delete("/api/user/addresses/:id", requireLogin, async (req, res) => {
+  try {
+    const sessionUser = req.session.user;
+    const userEmail = typeof sessionUser === "string" ? sessionUser : sessionUser?.email;
+    const addressId = req.params.id;
+
+    if (!userEmail) return res.status(400).json({ error: "Email required" });
+
+    const query = `
+      DELETE FROM main_useraddress
+      WHERE id = $1 AND email_id = $2
+      RETURNING *
+    `;
+
+    const result = await pool.query(query, [addressId, userEmail]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Address not found" });
+    }
+
+    res.json({ message: "Address deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting address:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.get("/api/user/addresses/:id", requireLogin, async (req, res) => {
+  const { id } = req.params;
+  const sessionUser = req.session.user;
+  const userEmail = typeof sessionUser === "string" ? sessionUser : sessionUser?.email;
+
+  if (!userEmail) return res.status(400).json({ error: "Missing email" });
+
+  try {
+    const query = `
+      SELECT id, name, phone, province, district, subdistrict, postal_code, address, is_default
+      FROM main_useraddress
+      WHERE email_id = $1 AND id = $2
+    `;
+    const { rows } = await pool.query(query, [userEmail, id]);
+
+    if (rows.length === 0) return res.status(404).json({ error: "Address not found" });
+
+    res.json(rows[0]);
+  } catch (err) {
+    console.error("Error fetching address:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.put("/api/user/addresses/:id", requireLogin, async (req, res) => {
+  const { id } = req.params;
+  const { name, phone, province, district, subdistrict, postal_code, address } = req.body;
+  const sessionUser = req.session.user;
+  const userEmail = typeof sessionUser === "string" ? sessionUser : sessionUser?.email;
+
+  if (!userEmail) return res.status(400).json({ error: "Missing email" });
+
+  try {
+    const query = `
+      UPDATE main_useraddress
+      SET name = $1, phone = $2, province = $3, district = $4, subdistrict = $5, postal_code = $6, address = $7
+      WHERE email_id = $8 AND id = $9
+      RETURNING *
+    `;
+    const { rows } = await pool.query(query, [name, phone, province, district, subdistrict, postal_code, address, userEmail, id]);
+
+    res.json(rows[0]);
+  } catch (err) {
+    console.error("Error updating address:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 const PORT = process.env.PORT || 3001;
 

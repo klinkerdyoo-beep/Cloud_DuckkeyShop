@@ -3,7 +3,8 @@ import Narbar from '../components/Narbar';
 import Profile from '../components/Profile';
 import bg1 from '../assets/img/bg1.png';
 import { useEffect, useState } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 interface Address {
@@ -18,7 +19,7 @@ interface Address {
   is_default: boolean;
 }
 
-export default function LoginChangeAddress() {
+export default function LoginAddAddress() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [address, setAddress] = useState<Address>({
@@ -34,7 +35,9 @@ export default function LoginChangeAddress() {
   });
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) return; // no id → add mode, skip fetch
+
+    // Edit mode → fetch existing address
     fetch(`${API_URL}/api/user/addresses/${id}`, { credentials: "include" })
       .then((res) => res.json())
       .then((data: Address) => setAddress(data))
@@ -43,20 +46,34 @@ export default function LoginChangeAddress() {
 
   const handleSave = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/user/addresses/${id}`, {
-        method: "PUT",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(address),
-      });
-      if (!res.ok) throw new Error("Failed to update address");
-      navigate("/LoginAddress"); // redirect back to address list
+      if (id) {
+        // EDIT existing address
+        const res = await fetch(`${API_URL}/api/user/addresses/${id}`, {
+          method: "PUT",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(address),
+        });
+        if (!res.ok) throw new Error("Failed to update address");
+      } else {
+        // ADD new address
+        const res = await fetch(`${API_URL}/api/user/addresses`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(address),
+        });
+        if (!res.ok) throw new Error("Failed to create address");
+      }
+
+      navigate("/LoginAddress"); // back to address list
     } catch (err) {
       console.error(err);
     }
   };
 
   const handleSetDefault = async () => {
+    if (!id) return; // only for existing addresses
     try {
       const res = await fetch(`${API_URL}/api/user/addresses/${id}/default`, {
         method: "PUT",
@@ -142,14 +159,23 @@ export default function LoginChangeAddress() {
                     onClick={handleSave}
                     className='rounded-xl text-white bg-green-600 hover:bg-green-700 p-2'
                   >
-                    Confirm
+                    {id ? "Update" : "Add"} Address
                   </button>
 
-                  <Link to = "/LoginAddress"
+                  {id && !address.is_default && (
+                    <button
+                      onClick={handleSetDefault}
+                      className='rounded-xl border-2 border-red-400 text-red-400 p-2'
+                    >
+                      Set as Default
+                    </button>
+                  )}
+
+                  <Link to="/LoginAddress"
                     className='rounded-xl border-2 border-gray-400 hover:border-gray-600 text-gray-400 p-2'
-                >
-                    Cancle
-                </Link>
+                  >
+                    Cancel
+                  </Link>
                 </div>
               </div>
             </div>

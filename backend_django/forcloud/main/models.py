@@ -80,7 +80,8 @@ class CustomType(models.Model):
 class Order(models.Model):
     email = models.ForeignKey(UserInfo, on_delete=models.CASCADE)
     orderDate = models.DateTimeField()
-    orderStatus = models.TextField()
+    orderStatus = models.TextField(default="รอตรวจสอบ")
+    parcelStatus = models.TextField(default="รอตรวจสอบ")
     totalPrice = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     name = models.TextField()
     phone = models.TextField()
@@ -121,8 +122,15 @@ class UserAddress(models.Model):
     email = models.ForeignKey(UserInfo, on_delete=models.CASCADE)
     name = models.TextField()
     phone = models.TextField(null=True, blank=True)
-    address = models.TextField()
+    province = models.TextField(null=True, blank=True)
+    district = models.TextField(null=True, blank=True)
+    subdistrict = models.TextField(null=True, blank=True)
+    postal_code = models.TextField(null=True, blank=True)
+    address = models.TextField(null=True, blank=True)
+    is_default = models.BooleanField(default=False)
 
+    def __str__(self):
+        return f"{self.name} ({self.email.email})"
 
 class ProductImage(models.Model):
     product = models.ForeignKey(ProductDetail, on_delete=models.CASCADE)
