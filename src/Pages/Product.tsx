@@ -6,16 +6,17 @@ import bg1 from "../assets/img/bg1.png";
 
 import Loading from "./loading";
 import RandomProds from "../components/randomProds";
-
 import type { Product } from "../types";
+import { useUser } from "../contexts/UserContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
-// fetch(`${API_URL}/api/products/`)
 
 export default function ProductPage() {
   const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<Product | null>(null);
   const [quantities, setquantities] = useState(1);
+  const { user } = useUser();
+  const isLoggedIn = !!user;
 
   useEffect(() => {
     fetch(`${API_URL}/api/products/${id}`)
@@ -24,28 +25,35 @@ export default function ProductPage() {
       .catch(console.error);
   }, [id]);
 
+  if (!product) return <Loading />;
 
-  if (!product) {
-    return (
-      <Loading />
-    );
-  }
-
-  // const { addToCart } = useCart();
   const handleAddToCart = async () => {
-  const email = "alice@example.com";
-  const body = { email, productID: product?.productID, quantities: quantities, customValue: "" };
+    if (!user) {
+      alert("Please log in to add items to your cart.");
+      return;
+    }
 
-  const res = await fetch(`${API_URL}/api/cart/add`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+    const body = {
+      email: user.email,
+      productID: product.productID,
+      quantities: quantities,
+      customValue: "",
+    };
 
-  const data = await res.json();
-  if (data.success) alert(`Added ${quantities} of ${product?.productName} to cart`);
-};
+    const res = await fetch(`${API_URL}/api/cart/add`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      credentials: "include",
+    });
 
+    const data = await res.json();
+    if (data.success) {
+      alert(`Added ${quantities} of ${product.productName} to cart`);
+    } else {
+      alert("Failed to add product to cart.");
+    }
+  };
 
   return (
     <div
@@ -64,32 +72,42 @@ export default function ProductPage() {
               className="rounded-lg shadow-lg"
             />
           </div>
+
           <div>
             <h2 className="m-5 text-2xl text-center">{product.productName}</h2>
             <h2 className="text-red-800 text-xl mb-3">{product.price} ฿</h2>
 
-            <div className="flex items-center gap-3 mb-3">
-              <button
-                onClick={() => setquantities((q) => Math.max(1, q - 1))}
-                className="bg-gray-300 hover:bg-amber-500 px-3 rounded"
-              >
-                -
-              </button>
-              <span>{quantities}</span>
-              <button
-                onClick={() => setquantities((q) => q + 1)}
-                className="bg-gray-300 hover:bg-amber-500 px-3 rounded"
-              >
-                +
-              </button>
-            </div>
+            {/* Only show if logged in */}
+            {isLoggedIn ? (
+              <>
+                <div className="flex items-center gap-3 mb-3">
+                  <button
+                    onClick={() => setquantities((q) => Math.max(1, q - 1))}
+                    className="bg-gray-300 hover:bg-amber-500 px-3 rounded"
+                  >
+                    -
+                  </button>
+                  <span>{quantities}</span>
+                  <button
+                    onClick={() => setquantities((q) => q + 1)}
+                    className="bg-gray-300 hover:bg-amber-500 px-3 rounded"
+                  >
+                    +
+                  </button>
+                </div>
 
-            <button
-              onClick={handleAddToCart}
-              className="mt-3 p-3 rounded-xl bg-red-800 hover:bg-red-500 text-sm text-white"
-            >
-              Add to cart
-            </button>
+                <button
+                  onClick={handleAddToCart}
+                  className="mt-3 p-3 rounded-xl bg-red-800 hover:bg-red-500 text-sm text-white"
+                >
+                  Add to cart
+                </button>
+              </>
+            ) : (
+              <p className="text-gray-600 italic mt-3">
+                Please log in to purchase or add to cart.
+              </p>
+            )}
 
             <p className="mt-3 text-black max-w-sm">{product.description}</p>
             <h3 className="mt-2 font-bold text-red-800">
@@ -102,13 +120,14 @@ export default function ProductPage() {
         </div>
       </div>
 
-        <div className="p-10 py-10 justify-center bg-white/90 items-center w-full text-center">
-            <h1>Art Shop</h1>
-            <p>
-            Explore original paintings, sculptures, and handcrafted art pieces for your collection.
-            </p>
-        </div>
-        <RandomProds />
+      <div className="p-10 py-10 justify-center bg-white/90 items-center w-full text-center">
+        <h1>Art Shop</h1>
+        <p>
+          Explore original paintings, sculptures, and handcrafted art pieces for your collection.
+        </p>
+      </div>
+
+      <RandomProds />
     </div>
   );
 }

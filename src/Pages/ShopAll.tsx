@@ -72,7 +72,7 @@ export default function Shop() {
       <Path />
 
       <div className="p-10 py-10 justify-center bg-white/90 items-center w-full text-center">
-        <h1>{categoryInfo ? categoryInfo.categoryName : "Art Shop"}</h1>
+        <h1 className="text-3xl font-bold text-black">{categoryInfo ? categoryInfo.categoryName : "Art Shop"}</h1>
         <p>{categoryInfo ? categoryInfo.description : "Explore original paintings, sculptures, and handcrafted art pieces for your collection."}</p>
       </div>
 

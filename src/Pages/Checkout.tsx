@@ -1,11 +1,31 @@
 
+import { Link, useLocation } from 'react-router-dom'
+import { useState, useEffect } from "react";
+
 import Narbar from '../components/Narbar'
 import Path from '../components/Path'
 import bg1 from '../assets/img/bg1.png'
 import Strawberry from '../assets/img/Strawberry_Hug_Toast.jpg'
-import { Link } from 'react-router-dom'
+import noImg from "../assets/img/no-img-rec.png";
+
+import type { CartItem } from "../types";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Shop(){
+    const [total, setTotal] = useState(0);
+    const location = useLocation();
+    const selectedItems: CartItem[] = location.state?.items ?? [];
+        // calculate total based on selected items
+        useEffect(() => {
+            const sum = selectedItems.reduce(
+            (acc, item) => acc + item.price * item.quantities,
+            0
+            );
+            setTotal(sum);
+        }, [selectedItems]);
+
+    console.log("Selected items passed from Cart:", selectedItems);
 
     return (
       <>
@@ -151,40 +171,42 @@ export default function Shop(){
              {/* RIGHT SIDE - Order Summary */}
           <div className="bg-white/90 w-[400px] max-h-max p-5 rounded-xl shadow-lg">
             <h2 className="text-2xl font-semibold border-b-2 pb-2 mb-4">Your Order</h2>
-
-            {/* สินค้ารายการ */}
-            <div className="flex items-center justify-between border-b pb-3 mb-3">
-              <div className="flex items-center gap-3">
-                <img src={Strawberry} alt="Strawberry Toast" className="w-16 h-16 object-cover rounded-md" />
-                <div>
-                  <p className="font-semibold">Strawberry Hug Toast</p>
-                  <p className="text-gray-500 text-sm">Qty: 2</p>
-                </div>
-              </div>
-              <p className="font-semibold">฿240</p>
-            </div>
-
-            {/* สามารถเพิ่มสินค้าอีก */}
-            <div className="flex items-center justify-between border-b pb-3 mb-3">
-              <div className="flex items-center gap-3">
-                <img src={Strawberry} alt="Drink" className="w-16 h-16 object-cover rounded-md" />
-                <div>
-                  <p className="font-semibold">Iced Cocoa</p>
-                  <p className="text-gray-500 text-sm">Qty: 1</p>
-                </div>
-              </div>
-              <p className="font-semibold">฿90</p>
-            </div>
+                {selectedItems.length === 0 ? (
+                    <p>No items selected.</p>
+                ) : (
+                    selectedItems.map((item: any) => (
+                    <div key={item.product_id} className="flex items-center justify-between border-b pb-3 mb-3">
+                        <div className="flex items-center gap-3">
+                            <img className="w-16 h-16 object-cover rounded-md"
+                                src={item.imgURL ? `${API_URL}${item.imgURL}` : noImg} 
+                                alt={item.productName}/>
+                            <div>
+                            <p className="font-semibold">
+                                {item.custom_product_id ? (
+                                <h2 className="text-red-700 font-semibold">
+                                    {item.productName}: {item.customValue}
+                                </h2>
+                                ) : (
+                                <Link to={`/product/${item.product_id}`}>
+                                    <h2 className="text-red-700 font-semibold">
+                                    {item.productName}
+                                    </h2>
+                                </Link>
+                                )}
+                            </p>
+                            <p className="text-gray-500 text-sm">Qty: {item.quantities}</p>
+                            </div>
+                        </div>
+                    <p className="font-semibold">฿{(item.price*item.quantities).toLocaleString("en-US")}</p>
+                    </div>
+                    ))
+                )}
 
             {/* สรุปราคา */}
-            <div className="border-t pt-3 space-y-2">
-              <div className="flex justify-between text-gray-600">
-                <p>Subtotal</p>
-                <p>฿330</p>
-              </div>
-              <div className="flex justify-between font-semibold text-lg border-t pt-2">
+            <div className="pt-3 space-y-2">
+              <div className="flex justify-between font-semibold text-lg pt-2">
                 <p>Total</p>
-                <p>฿350</p>
+                <p>฿{total.toLocaleString("en-US")}</p>
               </div>
             </div>
 

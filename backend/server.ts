@@ -493,7 +493,7 @@ app.delete("/api/categories/:id", async (req, res) => {
 
 
 // add cart
-app.post("/api/cart/add", async (req, res) => {
+app.post("/api/cart/add", requireLogin, async (req, res)=> {
   try {
     const { email, productID, quantities = 1, customValue = "" } = req.body;
     const existing = await pool.query(
@@ -524,7 +524,7 @@ app.post("/api/cart/add", async (req, res) => {
 });
 
 // cart list for user
-app.get("/api/cart/:email", async (req, res) => {
+app.get("/api/cart/:email", requireLogin, async (req, res) => {
   try {
     const { email } = req.params;
     const result = await pool.query(
@@ -549,7 +549,7 @@ app.get("/api/cart/:email", async (req, res) => {
 });
 
 // Update cart
-app.post("/api/cart/update", async (req, res) => {
+app.post("/api/cart/update", requireLogin, async (req, res) => {
   try {
     const { email, productID, customValue = "", quantities } = req.body;
 
@@ -584,7 +584,7 @@ app.post("/api/cart/update", async (req, res) => {
 
 
 // Remove from cart
-app.post("/api/cart/remove", async (req, res) => {
+app.post("/api/cart/remove", requireLogin, async (req, res) => {
   try {
     const { email, productID, customValue = "" } = req.body;
 
@@ -624,7 +624,7 @@ const customStorage = multer.diskStorage({
 });
 const uploadCustom = multer({ storage: customStorage });
 
-app.post("/api/cart/add-custom", uploadCustom.single("customImage"), async (req, res) => {
+app.post("/api/cart/add-custom", uploadCustom.single("customImage"), requireLogin, async (req, res) => {
   try {
     const { user, profile, keyColor, textColor, customText, notes } = req.body;
 

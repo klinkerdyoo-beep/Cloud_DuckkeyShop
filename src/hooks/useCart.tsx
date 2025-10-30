@@ -1,23 +1,32 @@
 import { useState, useEffect } from "react";
 import type { CartItem, CustomProductInput } from "../types";
+import { useUser } from "../contexts/UserContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
-// fetch(`${API_URL}/api/products/`)
 
 export function useCart() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-  const email = "alice@example.com"; //mock
-
-  // fetch cart from backend
+  const { user } = useUser();
+  const email = user?.email;
   useEffect(() => {
-    fetch(`${API_URL}/api/cart/${email}`)
-      .then((res) => res.json())
-      .then((data: CartItem[]) => setCart(data))
-      .catch(console.error);
-  }, [email]);
+    if (!email) {
+      setCart([]);
+      return;
+    }
 
+    setLoading(true);
+    fetch(`${API_URL}/api/cart/${email}`, { credentials: "include" })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch cart");
+        return res.json();
+      })
+      .then((data: CartItem[]) => setCart(data))
+      .catch((err) => console.error("Cart fetch error:", err))
+      .finally(() => setLoading(false));
+  }, [email]);
   // calculate total
   useEffect(() => {
     const sum = cart.reduce((acc, item) => acc + item.price * item.quantities, 0);
@@ -34,6 +43,7 @@ export function useCart() {
         quantities: item.quantities,
         customValue: item.customValue,
       }),
+      credentials: "include",
     });
 
     setCart((prev) => {
@@ -52,19 +62,25 @@ export function useCart() {
   };
 
 
-  const addCustomProductToCart = async (customData: CustomProductInput) => {
+ const addCustomProductToCart = async (customData: CustomProductInput) => {
+    if (!email) return alert("Please log in first.");
     const formData = new FormData();
+
+  
     formData.append("userEmail", email);
+
     formData.append("profile", customData.profile);
     formData.append("keyColor", customData.keyColor);
     formData.append("textColor", customData.textColor);
     formData.append("customText", customData.customText);
+
     if (customData.notes) formData.append("notes", customData.notes);
     if (customData.customImage) formData.append("customImage", customData.customImage);
 
     const response = await fetch(`${API_URL}/api/cart/add-custom`, {
       method: "POST",
       body: formData,
+      credentials: "include",
     });
 
     const data = await response.json();
@@ -87,10 +103,9 @@ export function useCart() {
     return data.id;
   };
 
-  const updatequantities = async (
-    item: CartItem,
-    qty: number
-  ) => {
+  const updatequantities = async (item: CartItem, qty: number) => {
+    if (!email) return;
+
     const id = item.custom_product_id ?? item.product_id;
     const customValue = item.custom_product_id ? item.customValue : "";
 
@@ -98,6 +113,7 @@ export function useCart() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, productID: id, quantities: qty, customValue }),
+      credentials: "include",
     });
 
     setCart((prev) =>
@@ -112,15 +128,17 @@ export function useCart() {
     );
   };
 
-
   const removeFromCart = async (item: CartItem) => {
+    if (!email) return;
+
     const id = item.custom_product_id ?? item.product_id;
     const customValue = item.custom_product_id ? item.customValue : "";
 
-    await fetch(`${API_URL}/api/cart/remvoe`, {
+    await fetch(`${API_URL}/api/cart/remove`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, productID: id, customValue }),
+      credentials: "include",
     });
 
     setCart((prev) =>
@@ -133,6 +151,7 @@ export function useCart() {
   };
 
   const clearCart = async () => {
+    if (!email) return;
     setCart([]);
   };
 
@@ -144,5 +163,6 @@ export function useCart() {
     removeFromCart,
     clearCart,
     total,
+    loading,
   };
 }
