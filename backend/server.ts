@@ -12,6 +12,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "*",
+  })
+);
+
 // db from .env
 const pool = new Pool({
   user: process.env.DB_USER,
@@ -316,7 +322,8 @@ app.post("/api/cart/add-custom", uploadCustom.single("customImage"), async (req,
 // });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => 
-  console.log(`Backend running on http://localhost:${PORT}/api/products`)
-);
+
+const BACKEND_URL = process.env.BACKEND_URL || `http://localhost:${PORT}`;
+
+app.listen(PORT, () => console.log(`BackEnd: ${BACKEND_URL}/api/products`));
 

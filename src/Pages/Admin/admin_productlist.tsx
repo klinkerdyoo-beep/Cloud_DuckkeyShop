@@ -11,27 +11,20 @@ import AdminSidebar from "./admin_sidebar";
 import AdminHeader from "./admin_header";
 import Loading from "../loading";
 
-type Product = {
-  productID: number;
-  productName: string;
-  price: number;
-  description: string;
-  imgURL?: string;
-  size: string;
-  material: string;
-  addedDate: string;
-  updatedDate: string;
-};
+import type { ProductFull } from "../../types";
+
+const API_URL = import.meta.env.VITE_API_URL;
+// fetch(`${API_URL}/api/products/`)
 
 export default function AdminProductList() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductFull[]>([]);
   const [loading, setLoading] = useState(true);
 
   // fetch from backend
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("http://localhost:3001/api/products/");
+        const res = await fetch(`${API_URL}/api/products/`);
         if (!res.ok) throw new Error("Failed to fetch products");
         const data = await res.json();
         setProducts(data);
@@ -90,7 +83,7 @@ export default function AdminProductList() {
                 >
                   <div className="p-6 flex">
                     <img className="w-32 h-32 object-cover rounded-md" 
-                      src={`http://localhost:3001${product.imgURL}` || noIMG}
+                      src={`${API_URL}${product.imgURL}` || noIMG}
                       alt={product.productName}/>
                     <div className="ml-6 flex-1">
                       <h2 className="text-lg font-bold">{product.productName}</h2>

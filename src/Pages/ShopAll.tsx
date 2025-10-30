@@ -9,6 +9,9 @@ import { Link } from "react-router-dom";
 
 import type { Product } from "../types";
 
+const API_URL = import.meta.env.VITE_API_URL;
+// fetch(`${API_URL}/api/products/`)
+
 export default function Shop() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -17,7 +20,7 @@ export default function Shop() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("http://localhost:3001/api/products/");
+        const res = await fetch(`${API_URL}/api/products/`);
         if (!res.ok) throw new Error("Failed to fetch products");
         const data = await res.json();
         setProducts(data);
@@ -72,7 +75,7 @@ export default function Shop() {
               >
                 <img
                   className="mx-auto w-60 object-cover"
-                  src={`http://localhost:3001${product.imgURL}` || noIMG}
+                  src={`${API_URL}${product.imgURL}` || noIMG}
                   alt={product.productName}
                 />
                 <h2 className="text-black m-5 text-xl text-center">{product.productName}</h2>

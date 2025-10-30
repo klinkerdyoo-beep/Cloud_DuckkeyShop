@@ -7,6 +7,10 @@ export interface Product {
     material?: string;
     imgURL?: string;
 }
+export interface ProductFull extends Product {
+    addedDate: string;
+    updatedDate: string;
+}
 
 export interface CartItem extends Product {
     product_id: string;

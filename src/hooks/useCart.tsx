@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import type { CartItem, CustomProductInput } from "../types";
 
+const API_URL = import.meta.env.VITE_API_URL;
+// fetch(`${API_URL}/api/products/`)
+
 export function useCart() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -9,7 +12,7 @@ export function useCart() {
 
   // fetch cart from backend
   useEffect(() => {
-    fetch(`http://localhost:3001/api/cart/${email}`)
+    fetch(`${API_URL}/api/cart/${email}`)
       .then((res) => res.json())
       .then((data: CartItem[]) => setCart(data))
       .catch(console.error);
@@ -22,7 +25,7 @@ export function useCart() {
   }, [cart]);
 
   const addToCart = async (item: CartItem) => {
-    await fetch("http://localhost:3001/api/cart/add", {
+    await fetch(`${API_URL}/api/cart/add`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -59,7 +62,7 @@ export function useCart() {
     if (customData.notes) formData.append("notes", customData.notes);
     if (customData.customImage) formData.append("customImage", customData.customImage);
 
-    const response = await fetch("http://localhost:3001/api/cart/add-custom", {
+    const response = await fetch(`${API_URL}/api/cart/add-custom`, {
       method: "POST",
       body: formData,
     });
@@ -91,7 +94,7 @@ export function useCart() {
     const id = item.custom_product_id ?? item.product_id;
     const customValue = item.custom_product_id ? item.customValue : "";
 
-    await fetch("http://localhost:3001/api/cart/update", {
+    await fetch(`${API_URL}/api/cart/update`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, productID: id, quantities: qty, customValue }),
@@ -114,7 +117,7 @@ export function useCart() {
     const id = item.custom_product_id ?? item.product_id;
     const customValue = item.custom_product_id ? item.customValue : "";
 
-    await fetch("http://localhost:3001/api/cart/remove", {
+    await fetch(`${API_URL}/api/cart/remvoe`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, productID: id, customValue }),

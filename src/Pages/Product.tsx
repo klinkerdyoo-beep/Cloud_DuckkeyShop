@@ -9,13 +9,16 @@ import RandomProds from "../components/randomProds";
 
 import type { Product } from "../types";
 
+const API_URL = import.meta.env.VITE_API_URL;
+// fetch(`${API_URL}/api/products/`)
+
 export default function ProductPage() {
   const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<Product | null>(null);
   const [quantities, setquantities] = useState(1);
 
   useEffect(() => {
-    fetch(`http://localhost:3001/api/products/${id}`)
+    fetch(`${API_URL}/api/products/${id}`)
       .then((res) => res.json())
       .then(setProduct)
       .catch(console.error);
@@ -33,7 +36,7 @@ export default function ProductPage() {
   const email = "alice@example.com";
   const body = { email, productID: product?.productID, quantities: quantities, customValue: "" };
 
-  const res = await fetch("http://localhost:3001/api/cart/add", {
+  const res = await fetch(`${API_URL}/api/cart/add`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -56,7 +59,7 @@ export default function ProductPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white/90 p-10 rounded-xl">
           <div className="w-90">
             <img
-              src={`http://localhost:3001${product.imgURL || ""}`}
+              src={`${API_URL}${product.imgURL || ""}`}
               alt={product.productName}
               className="rounded-lg shadow-lg"
             />
