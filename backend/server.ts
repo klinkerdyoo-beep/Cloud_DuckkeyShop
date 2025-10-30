@@ -124,7 +124,142 @@ app.get("/api/categories", async (req, res) => {
   }
 });
 
-// cart
+
+// Add product
+const productStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, "uploads/products"),
+  filename: (req, file, cb) =>
+    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}-${file.originalname}`),
+});
+const uploadProduct = multer({ storage: productStorage });
+
+app.post("/api/products", uploadProduct.single("image"), async (req, res) => {
+  try {
+    const { productName, price, description, size, material, category_id, stock, is_available } = req.body;
+
+    const newId = `PROD_${Date.now()}`;
+    const imagePath = req.file ? `/uploads/products/${req.file.filename}` : null;
+
+    // Insert product
+    await pool.query(
+      `INSERT INTO main_productdetail (
+        "productID", "productName", price, description, size, material, category_id, stock, is_available, "addedDate", "updatedDate"
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())`,
+      [newId, productName, price, description, size, material, category_id, stock, is_available]
+    );
+
+    // Insert image
+    if (imagePath) {
+      await pool.query(
+        `INSERT INTO main_productimage (product_id, "imgURL") VALUES ($1, $2)`,
+        [newId, imagePath]
+      );
+    }
+
+    res.json({ success: true, message: "Product added successfully", productID: newId });
+  } catch (err) {
+    console.error("Error adding product:", err);
+    res.status(500).json({ error: "Failed to add product" });
+  }
+});
+
+// Update product
+const updateProductStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, "uploads/products"),
+  filename: (req, file, cb) =>
+    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}-${file.originalname}`),
+});
+const uploadUpdateProduct = multer({ storage: updateProductStorage });
+
+app.put("/api/products/:id", uploadUpdateProduct.single("image"), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { productName, price, description, size, material, category_id, stock, is_available } = req.body;
+
+    // Check if product exists
+    const existing = await pool.query(`SELECT * FROM main_productdetail WHERE "productID" = $1`, [id]);
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    // Update product
+    await pool.query(
+      `UPDATE main_productdetail
+       SET "productName" = $1,
+           price = $2,
+           description = $3,
+           size = $4,
+           material = $5,
+           category_id = $6,
+           stock = $7,
+           is_available = $8,
+           "updatedDate" = NOW()
+       WHERE "productID" = $9`,
+      [productName, price, description, size, material, category_id, stock, is_available === "true" || is_available === true, id]
+    );
+
+    // Update image if uploaded
+    if (req.file) {
+      const imagePath = `/uploads/products/${req.file.filename}`;
+
+      // Check if product already has an image
+      const imgExist = await pool.query(
+        `SELECT * FROM main_productimage WHERE product_id = $1 LIMIT 1`,
+        [id]
+      );
+
+      if (imgExist.rows.length > 0) {
+        // Update existing image
+        await pool.query(
+          `UPDATE main_productimage SET "imgURL" = $1 WHERE product_id = $2`,
+          [imagePath, id]
+        );
+      } else {
+        // Insert new image
+        await pool.query(
+          `INSERT INTO main_productimage (product_id, "imgURL") VALUES ($1, $2)`,
+          [id, imagePath]
+        );
+      }
+    }
+
+    res.json({ success: true, message: "Product updated successfully" });
+  } catch (err) {
+    console.error("Error updating product:", err);
+    res.status(500).json({ error: "Failed to update product" });
+  }
+});
+
+// Delete product
+app.delete("/api/products/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Delete image
+    const imgRes = await pool.query(`SELECT "imgURL" FROM main_productimage WHERE product_id=$1`, [id]);
+    if (imgRes.rows.length > 0) {
+      const imgPath = imgRes.rows[0].imgURL;
+      if (imgPath && fs.existsSync(path.join(__dirname, imgPath))) {
+        fs.unlinkSync(path.join(__dirname, imgPath));
+      }
+      await pool.query(`DELETE FROM main_productimage WHERE product_id=$1`, [id]);
+    }
+
+    // Delete product
+    await pool.query(`DELETE FROM main_productdetail WHERE "productID"=$1`, [id]);
+
+    res.json({ success: true, message: "Product deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting product:", err);
+    res.status(500).json({ error: "Failed to delete product" });
+  }
+});
+
+
+
+
+// add cart
 app.post("/api/cart/add", async (req, res) => {
   try {
     const { email, productID, quantities = 1, customValue = "" } = req.body;
@@ -155,7 +290,7 @@ app.post("/api/cart/add", async (req, res) => {
   }
 });
 
-// cart items for user
+// cart list for user
 app.get("/api/cart/:email", async (req, res) => {
   try {
     const { email } = req.params;

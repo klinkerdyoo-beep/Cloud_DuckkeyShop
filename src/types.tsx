@@ -10,6 +10,8 @@ export interface Product {
 export interface ProductFull extends Product {
     addedDate: string;
     updatedDate: string;
+    stock: Number;
+    is_available: Boolean;
 }
 
 export interface CartItem extends Product {

@@ -19,6 +19,7 @@ import CustomProductPage from './Pages/CustomizeKeycap';
 import AdminProductList from './Pages/Admin/admin_productlist';
 import AdminProductDelete from './Pages/Admin/admin_product_delete';
 import AdminProductAdd from './Pages/Admin/admin_product_add';
+import AdminProductEdit from './Pages/Admin/admin_product_edit';
 import AdminOrderList from './Pages/Admin/admin_orderlist';
 import AdminOrderManage from './Pages/Admin/admin_order_manage';
 
@@ -55,6 +56,7 @@ function App() {
         <Route path="/admin/ProductAdd" element={<AdminProductAdd />} />
         <Route path="/admin/OrderList" element={<AdminOrderList />} />
         <Route path="/admin/order/:id" element={<AdminOrderManage />} />
+        <Route path="/admin/ProductEdit/:id" element={<AdminProductEdit />} />
 
         <Route path="*" element={<h1>404 Not Found</h1>} />
       </Routes>

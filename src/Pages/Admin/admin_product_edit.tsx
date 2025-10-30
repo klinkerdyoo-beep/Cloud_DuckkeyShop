@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import AdminSidebar from "./admin_sidebar";
 import AdminHeader from "./admin_header";
 import "./admin.css";
@@ -10,9 +10,13 @@ interface Category {
 }
 
 const API_URL = import.meta.env.VITE_API_URL;
-// fetch(`${API_URL}/api/products/`)
 
-export default function AdminProductAdd() {
+export default function AdminProductEdit() {
+
+  // productID
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+
   const [productName, setProductName] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
@@ -24,6 +28,7 @@ export default function AdminProductAdd() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   const [is_available, setAvailable] = useState(true);
+  const [isLocalFile, setIsLocalFile] = useState(false);
 
   useEffect(() => {
     fetch(`${API_URL}/api/categories/`)
@@ -32,13 +37,33 @@ export default function AdminProductAdd() {
       .catch((err) => console.error("Error loading categories:", err));
   }, []);
 
+  useEffect(() => {
+    if (!id) return;
+    fetch(`${API_URL}/api/products/${id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setProductName(data.productName || "");
+        setPrice(data.price?.toString() || "");
+        setDescription(data.description || "");
+        setSize(data.size || "");
+        setMaterial(data.material || "");
+        setCategory(data.category_id?.toString() || "");
+        setStock(data.stock?.toString() || "1");
+        setAvailable(data.is_available ?? true);
+        setPreviewSrc(data.imgURL || null);
+      })
+      .catch((err) => console.error("Error loading product:", err));
+  }, [id]);
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setImageFile(file);
     if (file) {
       setPreviewSrc(URL.createObjectURL(file));
+      setIsLocalFile(true);
     } else {
       setPreviewSrc(null);
+      setIsLocalFile(false);
     }
   };
 
@@ -52,20 +77,20 @@ export default function AdminProductAdd() {
     formData.append("size", size);
     formData.append("material", material);
     formData.append("category_id", category);
-    if (imageFile) formData.append("image", imageFile);
     formData.append("stock", stock);
     formData.append("is_available", is_available ? "true" : "false");
-
+    if (imageFile) formData.append("image", imageFile);
 
     try {
-      const res = await fetch(`${API_URL}/api/products/`, {
-        method: "POST",
+      const res = await fetch(`${API_URL}/api/products/${id}`, {
+        method: "PUT",
         body: formData,
       });
-      if (!res.ok) throw new Error("Failed to add product");
-      alert("เพิ่มสินค้าเรียบร้อยแล้ว!");
+      if (!res.ok) throw new Error("Failed to update product");
+      alert("อัปเดตรายการสินค้าเรียบร้อยแล้ว!");
+      navigate("/admin/ProductList");
     } catch (error) {
-      console.error("Error adding product:", error);
+      console.error("Error updating product:", error);
     }
   };
 
@@ -77,11 +102,12 @@ export default function AdminProductAdd() {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <AdminHeader activePage="products" />
+
         {/* Main */}
         <main className="flex-1 flex justify-center overflow-x-hidden overflow-y-auto bg-background-light dark:bg-background-dark">
           <div className="container max-w-lg px-6 py-8">
             <h1 className="text-3xl font-bold text-text-light dark:text-text-dark mb-6">
-              เพิ่มรายการสินค้า
+              แก้ไขข้อมูลสินค้า
             </h1>
 
             <form onSubmit={handleSubmit} className="space-y-6 max-w-lg">
@@ -164,7 +190,7 @@ export default function AdminProductAdd() {
                   ))}
                 </select>
               </div>
-              
+
               {/* Stock */}
               <div>
                 <label className="block mb-1 font-medium">จำนวนสต็อกสินค้า</label>
@@ -179,9 +205,20 @@ export default function AdminProductAdd() {
                 />
               </div>
 
+              {/* 🆕 is_available */}
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={is_available}
+                  onChange={(e) => setAvailable(e.target.checked)}
+                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                />
+                <label className="font-medium">พร้อมจำหน่าย</label>
+              </div>
+
               {/* Image */}
               <div>
-                <label className="block mb-1 font-medium">Image Preview</label>
+                <label className="block mb-1 font-medium">เปลี่ยนภาพตัวอย่างสินค้า</label>
                 <input
                   type="file"
                   accept="image/*"
@@ -192,7 +229,7 @@ export default function AdminProductAdd() {
                 />
                 {previewSrc && (
                   <img
-                    src={previewSrc}
+                    src={isLocalFile ? previewSrc : `${API_URL}${previewSrc}`}
                     alt="Preview"
                     className="mt-3 max-h-64 object-contain rounded-md border"
                   />
@@ -203,7 +240,7 @@ export default function AdminProductAdd() {
                 type="submit"
                 className="w-full bg-sky-800 text-white py-3 px-4 rounded-md hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-primary"
               >
-                เพิ่มสินค้า
+                บันทึกการแก้ไข
               </button>
             </form>
           </div>

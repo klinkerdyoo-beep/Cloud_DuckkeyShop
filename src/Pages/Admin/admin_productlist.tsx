@@ -88,6 +88,9 @@ export default function AdminProductList() {
                     <div className="ml-6 flex-1">
                       <h2 className="text-lg font-bold">{product.productName}</h2>
                       <p className="mt-2 text-sm text-subtext-dark">
+                        stock: <span className="text-text-dark text-bold">{+product.stock}</span>
+                      </p>
+                      <p className="mt-2 text-sm text-subtext-dark">
                         ราคา: <span className="text-text-dark">{product.price}</span>
                       </p>
                       <p className="mt-1 text-sm text-subtext-dark">
@@ -101,11 +104,47 @@ export default function AdminProductList() {
                       </p>
                     </div>
                   </div>
+
+                  {/* edit del section */}
                   <div className="px-6 pb-4 flex justify-between items-center">
-                    <p className="text-xs text-subtext-dark">วันที่ล่าสุดที่แก้ไข: {new Date(product.updatedDate).toLocaleString()}</p>
-                    <button className="bg-gray-200 text-gray-800 px-4 py-1 rounded-md text-sm font-medium hover:bg-gray-300">
-                      แก้ไข
-                    </button>
+                    <p className="text-xs text-subtext-dark">
+                      วันที่ล่าสุดที่แก้ไข: {new Date(product.updatedDate).toLocaleString()}
+                    </p>
+                    <div className="flex space-x-2">
+                      <Link
+                        to={`/admin/productEdit/${product.productID}`}
+                        className="bg-gray-200 text-gray-800 px-4 py-1 rounded-md text-sm font-medium hover:bg-gray-300"
+                      >
+                        แก้ไข
+                      </Link>
+                      <button
+                        onClick={async () => {
+                          const confirmDelete = window.confirm(
+                            `❗ คุณกำลังจะลบข้อมูลสินค้า\n` +
+                            `ชื่อสินค้า: ${product.productName}\n` +
+                            `รหัส: ${product.productID}\n` +
+                            `หลังจากลบแล้ว ไม่สามารถกู้คืนได้`
+                          );
+                          if (!confirmDelete) return;
+
+                          try {
+                            const res = await fetch(`${API_URL}/api/products/${product.productID}`, {
+                              method: "DELETE",
+                            });
+                            if (!res.ok) throw new Error("Failed to delete product");
+                            setProducts(products.filter((p) => p.productID !== product.productID));
+                            alert("ลบสินค้าสำเร็จแล้ว!");
+                          } catch (err) {
+                            console.error("Error deleting product:", err);
+                            alert("ลบสินค้าล้มเหลว");
+                          }
+                        }}
+                        className="bg-red-500 text-white px-4 py-1 rounded-md text-sm font-medium hover:bg-red-600"
+                      >
+                        ลบ
+                      </button>
+
+                    </div>
                   </div>
                 </div>
               ))}
