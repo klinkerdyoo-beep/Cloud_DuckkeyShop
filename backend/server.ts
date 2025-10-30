@@ -19,10 +19,13 @@ const session = require("express-session");
 // Add session types
 declare module "express-session" {
   interface SessionData {
-    user?: string;
+    user?: {
+      email: string;
+    };
     cart?: any[];
   }
 }
+
 
 // Setup session
 app.use(
@@ -143,6 +146,66 @@ app.post('/api/logout', (req, res) => {
     res.json({ message: 'Logout successful' });
   });
 });
+app.put("/api/update-user", requireLogin, async (req, res) => {
+  const sessionUser = req.session.user;
+
+  // Ensure sessionUser is an object with email
+  const userEmail = typeof sessionUser === "string" ? sessionUser : sessionUser?.email;
+
+  if (!userEmail) {
+    return res.status(401).json({ message: "Not logged in" });
+  }
+
+  const { username, name, phone, email, currentPassword, newPassword } = req.body;
+
+  try {
+    // Fetch user from DB
+    const result = await pool.query("SELECT * FROM main_userinfo WHERE email = $1", [userEmail]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const dbUser = result.rows[0];
+
+    // Only check password if user wants to change it
+    let finalPassword = dbUser.password;
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({ message: "Current password required to change password" });
+      }
+      if (dbUser.password !== currentPassword) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+      finalPassword = newPassword;
+    }
+
+    // Update query
+    const updatedResult = await pool.query(
+      `
+      UPDATE main_userinfo
+      SET username=$1, name=$2, phone=$3, email=$4, password=$5
+      WHERE email=$6
+      RETURNING *;
+      `,
+      [username, name, phone, email || dbUser.email, finalPassword, userEmail]
+    );
+
+    const updatedUser = updatedResult.rows[0];
+    delete updatedUser.password;
+
+    // Update session
+    req.session.user = updatedUser;
+
+    res.json({ message: "User updated successfully", user: updatedUser });
+  } catch (err: any) {
+    console.error("Update user error:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+
+
 
 
 const query_products = `
