@@ -15,8 +15,9 @@ export default function Shop(){
           >
           <Path/>   
           <Narbar/>
-        <div className='flex w-full p-20'>
-            <div className='bg-white/90 ml-5'>
+        <div className='flex w-full p-20 gap-12'>
+            {/* left side*/}
+            <div className='bg-white/90 flex-1 ml-5 p-5 rounded-xl shadow-lg'>
                 <p className='text-gray-700 text-xl border-b-2 p-2'>Delivery</p>
                 <div className='flex border-b-2 p-3'>
                     <div className='flex-1'>
@@ -138,12 +139,57 @@ export default function Shop(){
                         </div>
 
                     </div>
-                    <div className=''>Confirm</div>
+                    {/* ปุ่มยืนยัน */}
+                    <div className="mt-6 text-center">
+                        <button className="bg-red-700 text-white px-6 py-2 rounded-xl hover:bg-red-800 transition">
+                            Confirm Order
+                        </button>
+                    </div>
                 </div>
             </div>
+             {/* end left side*/}
+             {/* RIGHT SIDE - Order Summary */}
+          <div className="bg-white/90 w-[400px] max-h-max p-5 rounded-xl shadow-lg">
+            <h2 className="text-2xl font-semibold border-b-2 pb-2 mb-4">Your Order</h2>
 
-        </div> 
-          
+            {/* สินค้ารายการ */}
+            <div className="flex items-center justify-between border-b pb-3 mb-3">
+              <div className="flex items-center gap-3">
+                <img src={Strawberry} alt="Strawberry Toast" className="w-16 h-16 object-cover rounded-md" />
+                <div>
+                  <p className="font-semibold">Strawberry Hug Toast</p>
+                  <p className="text-gray-500 text-sm">Qty: 2</p>
+                </div>
+              </div>
+              <p className="font-semibold">฿240</p>
+            </div>
+
+            {/* สามารถเพิ่มสินค้าอีก */}
+            <div className="flex items-center justify-between border-b pb-3 mb-3">
+              <div className="flex items-center gap-3">
+                <img src={Strawberry} alt="Drink" className="w-16 h-16 object-cover rounded-md" />
+                <div>
+                  <p className="font-semibold">Iced Cocoa</p>
+                  <p className="text-gray-500 text-sm">Qty: 1</p>
+                </div>
+              </div>
+              <p className="font-semibold">฿90</p>
+            </div>
+
+            {/* สรุปราคา */}
+            <div className="border-t pt-3 space-y-2">
+              <div className="flex justify-between text-gray-600">
+                <p>Subtotal</p>
+                <p>฿330</p>
+              </div>
+              <div className="flex justify-between font-semibold text-lg border-t pt-2">
+                <p>Total</p>
+                <p>฿350</p>
+              </div>
+            </div>
+
+          </div>
+          </div>
 
       </div>
       </>
