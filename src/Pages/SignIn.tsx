@@ -5,28 +5,27 @@ import DuckBig from "../assets/img/duck-big.png";
 import { useState } from "react"; 
 import axios from "axios";
 
+import { useUser } from "../contexts/UserContext";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
-export default function Login(){
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+export default function Login() {
+  const { setUser } = useUser();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        console.log('Login attempt with:', { email, password });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-        try {
-            const response = await axios.post(`${API_URL}/api/login`, { email, password });
-            console.log('Login response:', response.data);
-
-            localStorage.setItem('user', JSON.stringify(response.data.user));
-            window.location.href = '/';
-        } catch (err: any) {
-            console.error(err);
-            alert('Login failed: ' + err.response?.data?.message || err.message);
-        }
-    };
-
+    try {
+      const response = await axios.post(`${API_URL}/api/login`, { email, password }, { withCredentials: true });
+      setUser(response.data.user); // update context
+      window.location.href = "/"; // redirect
+    } catch (err: any) {
+      alert("Login failed: " + (err.response?.data?.message ?? err.message));
+    }
+  };
+  
     return (
         <div className='text-black login-font'>
             <div

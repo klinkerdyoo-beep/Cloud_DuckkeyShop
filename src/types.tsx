@@ -1,3 +1,12 @@
+export interface User {
+  email: string;
+  username?: string;
+  name: string;
+  phone: string;
+  gender: string;
+  dob: string;
+}
+
 export interface Product {
     productID: string;
     productName: string;

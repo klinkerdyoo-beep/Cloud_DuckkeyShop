@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { Pool } from "pg";
 import dotenv from "dotenv";
@@ -7,16 +7,53 @@ import path from "path";
 import fs from "fs";
 
 dotenv.config();
-
 const app = express();
-app.use(cors());
+
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+
+app.use(cors({ origin: FRONTEND_URL, credentials: true }));
 app.use(express.json());
 
+const session = require("express-session");
+
+// Add session types
+declare module "express-session" {
+  interface SessionData {
+    user?: string;
+    cart?: any[];
+  }
+}
+
+// Setup session
 app.use(
-  cors({
-    origin: process.env.FRONTEND_URL || "*",
+  session({
+    name: "sid", // cookie name
+    secret: process.env.SESSION_SECRET || "mysecretkey",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24,
+      sameSite: "lax",
+      secure: false,
+    },
   })
 );
+
+// res.locals
+app.use((req, res, next) => {
+  res.locals.user = req.session.user ?? null;
+  res.locals.cart = req.session.cart ?? [];
+  next();
+});
+
+// Middleware
+function requireLogin(req: Request, res: Response, next: NextFunction) {
+  if (!req.session.user) {
+    return res.status(401).json({ message: "Please login first" });
+  }
+  next();
+}
 
 // db from .env
 const pool = new Pool({
@@ -27,6 +64,7 @@ const pool = new Pool({
   port: Number(process.env.DB_PORT) || 5432,
 });
 
+
 // dir setup
 const uploadDirs = ["uploads", "uploads/products", "uploads/slips", "uploads/custom_products/", "uploads/user_profiles/"];
 uploadDirs.forEach((dir) => {
@@ -34,6 +72,15 @@ uploadDirs.forEach((dir) => {
 });
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+
+app.get("/api/session", (req: Request, res: Response) => {
+  console.log("SESSION OBJECT:", req.session);
+  if (req.session.user) {
+    res.json({ user: req.session.user });
+  } else {
+    res.status(401).json({ error: "Not logged in" });
+  }
+});
 
 // User
 app.get('/api/users', async (req, res) => {
@@ -57,6 +104,7 @@ app.post('/api/signup', async (req, res) => {
         `;
         const values = [username, name, email, password, phone, gender, dob, profileImage];
         const result = await pool.query(query, values);
+        req.session.user = email;
         res.json({ message: 'Signup successful', user: result.rows[0] });
     } catch (err: any) {
         console.error(err);
@@ -65,31 +113,37 @@ app.post('/api/signup', async (req, res) => {
 });
 
 app.post('/api/login', async (req, res) => {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    try {
-        const result = await pool.query(
-            'SELECT * FROM main_userinfo WHERE email = $1 AND password = $2',
-            [email, password]
-        );
+  try {
+    const result = await pool.query(
+      'SELECT * FROM main_userinfo WHERE email=$1 AND password=$2',
+      [email, password]
+    );
 
-        if (result.rows.length === 0) {
-            return res.status(401).json({ message: 'Invalid email or password' });
-        }
-
-        const user = result.rows[0];
-        delete user.password;
-
-        res.json({ message: 'Login successful', user });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Internal server error' });
+    if (result.rows.length === 0) {
+      return res.status(401).json({ message: 'Invalid email or password' });
     }
+
+    const user = result.rows[0];
+    delete user.password;
+
+    req.session.user = user; // store user object in session
+    res.json({ message: 'Login successful', user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 });
 
 app.post('/api/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) return res.status(500).json({ message: 'Logout failed' });
+    res.clearCookie("sid");
     res.json({ message: 'Logout successful' });
+  });
 });
+
 
 const query_products = `
       SELECT 
@@ -359,7 +413,7 @@ app.delete("/api/categories/:id", async (req, res) => {
       WHERE id = $1
       RETURNING *;
     `;
-
+    const user = res.locals.user || null;
     const result = await pool.query(query, [id]);
 
     if (result.rowCount === 0) {
@@ -509,7 +563,7 @@ const uploadCustom = multer({ storage: customStorage });
 
 app.post("/api/cart/add-custom", uploadCustom.single("customImage"), async (req, res) => {
   try {
-    const { userEmail, profile, keyColor, textColor, customText, notes } = req.body;
+    const { user, profile, keyColor, textColor, customText, notes } = req.body;
 
     // Image, just in case na
     const imagePath = req.file ? `/uploads/custom_products/${req.file.filename}` : "";
@@ -526,7 +580,7 @@ app.post("/api/cart/add-custom", uploadCustom.single("customImage"), async (req,
         (user_id, profile, "keyColor", "textColor", "customText", notes, "customImage", price)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING id`,
-      [userEmail, profile, keyColor, textColor, customText, notes, imagePath, customPrice]
+      [user, profile, keyColor, textColor, customText, notes, imagePath, customPrice]
     );
 
     const newCustomId = result.rows[0].id;
@@ -536,7 +590,7 @@ app.post("/api/cart/add-custom", uploadCustom.single("customImage"), async (req,
       `INSERT INTO main_customercart 
         (email_id, product_id, quantities, custom_product_id, "customValue")
        VALUES ($1, $2, $3, $4, $5)`,
-      [userEmail, "KC_CUSTOM", 1, newCustomId, `${profile}_${keyColor}_${textColor}_${customText}`]
+      [user, "KC_CUSTOM", 1, newCustomId, `${profile}_${keyColor}_${textColor}_${customText}`]
     );
 
     res.json({

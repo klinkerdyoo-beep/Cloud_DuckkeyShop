@@ -4,9 +4,30 @@ import Profile from '../components/Profile';
 import bg1 from '../assets/img/bg1.png'
 import React, { useState } from 'react';
 
+import axios from "axios";
+import { useUser } from "../contexts/UserContext";
+import type { User } from "../types";
+
+// const { user } = useUser();
+
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function Account(){
+  const { user } = useUser();
   const [editMode, setEditMode] = useState(false);
   const [showChange, setShowChange] = useState(false);
+
+  const getUserSession = async () => {
+  try {
+    const res = await axios.get(`${API_URL}/api/session`, {
+      withCredentials: true,
+    });
+    return res.data;
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+};
 
     return (
         <div className='text-black'>
@@ -22,22 +43,45 @@ export default function Account(){
                 <Profile/>
                 <div className='flex flex-1 flex-col  items-center gap-4 justify-center mb-10'>
                     <div>
-                        <div className='p-2 mt-5'>
-                            <h2 className='text-sm mb-2'>Name for accout</h2>
-                            <input type="text" disabled={!editMode} className='w-full outline-none px-2 border-2 max-w-sm' />
-                        </div>
-                        <div className='p-2 mt-5'>
-                            <h2 className='text-sm mb-2'>Name</h2>
-                            <input type="text" disabled={!editMode} className='w-full outline-none px-2 border-2 max-w-sm' />
-                        </div>
-                        <div className='p-2 mt-5'>
-                            <h2 className='text-sm mb-2'>Phon Number</h2>
-                            <input type="text" disabled={!editMode} className='w-full outline-none px-2 border-2 max-w-sm' />
-                        </div>
-                        <div className='p-2 mt-5'>
-                            <h2 className='text-sm mb-2'>Email</h2>
-                            <input type="text" disabled={!editMode} className='w-full outline-none px-2 border-2 max-w-sm' />
-                        </div>
+<div className='p-2 mt-5'>
+  <h2 className='text-sm mb-2'>Name for account</h2>
+  <input
+    type="text"
+    disabled={!editMode}
+    className='w-full outline-none px-2 border-2 max-w-sm'
+    value={user?.username || ""}
+  />
+</div>
+
+<div className='p-2 mt-5'>
+  <h2 className='text-sm mb-2'>Name</h2>
+  <input
+    type="text"
+    disabled={!editMode}
+    className='w-full outline-none px-2 border-2 max-w-sm'
+    value={user?.name || ""}
+  />
+</div>
+
+<div className='p-2 mt-5'>
+  <h2 className='text-sm mb-2'>Phone Number</h2>
+  <input
+    type="text"
+    disabled={!editMode}
+    className='w-full outline-none px-2 border-2 max-w-sm'
+    value={user?.phone || ""}
+  />
+</div>
+
+<div className='p-2 mt-5'>
+  <h2 className='text-sm mb-2'>Email</h2>
+  <input
+    type="text"
+    disabled={!editMode}
+    className='w-full outline-none px-2 border-2 max-w-sm'
+    value={user?.email || ""}
+  />
+</div>
 
               {/* Password Section */}
               <div className="">
