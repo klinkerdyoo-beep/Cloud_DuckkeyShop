@@ -1,48 +1,59 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import AdminOrderSidebarr from "./admin_sidebar_order";
+import AdminOrderSidebar from "./admin_sidebar_order";
 import AdminHeader from "./admin_header";
 import "./admin.css";
 
-// mock
-const mockOrder = {
-  id: "1",
-  customerName: "เพลงจ้า",
-  email: "66070059@kmitl.ac.th",
-  productName: "Strawberry Hug Toast",
-  quantities: "2 ชิ้น",
-  totalPrice: "120 บาท",
-  transferSlip:
-    "https://thunder.in.th/wp-content/uploads/2024/06/%E0%B8%AA%E0%B8%A5%E0%B8%B4%E0%B8%9B%E0%B9%82%E0%B8%AD%E0%B8%99%E0%B9%80%E0%B8%87%E0%B8%B4%E0%B8%99.webp",
-  status: "รอตรวจสอบ",
-  orderDate: "2025-05-14 15:34:44",
-};
+const API_URL = import.meta.env.VITE_API_URL;
+import type { OrderFull } from "../../types";
 
 export default function AdminOrderManage() {
-  const { id } = useParams(); // /admin/order/:id
+  const { id } = useParams();
   const navigate = useNavigate();
-  const [order, setOrder] = useState<any>(null);
+  const [order, setOrder] = useState<OrderFull | null>(null);
   const [status, setStatus] = useState("");
 
   useEffect(() => {
-    // fetch from backend here
-    // fetch(`/api/orders/${id}`).then(res => res.json()).then(data => { ... })
-    setOrder(mockOrder);
-    setStatus(mockOrder.status);
-  }, [id]);
+    const fetchOrder = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/orders/${id}`);
+        if (!res.ok) throw new Error("Failed to fetch order");
+        const data = await res.json();
+        setOrder(data);
+        setStatus(data.status);
+      } catch (err) {
+        console.error("Error fetching order:", err);
+        alert("ไม่สามารถดึงข้อมูลการโอนนี้ได้");
+        navigate(-1);
+      }
+    };
+    fetchOrder();
+  }, [id, navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // send update to backend
-    console.log("Updated status:", status);
-    alert("สถานะถูกอัปเดตเรียบร้อยแล้ว");
+    if (!order) return;
+
+    try {
+      const res = await fetch(`${API_URL}/api/orders/${order.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) throw new Error("Failed to update status");
+      alert("สถานะถูกอัปเดตเรียบร้อยแล้ว");
+    } catch (err) {
+      console.error("Error updating order:", err);
+      alert("ไม่สามารถอัปเดตสถานะได้");
+    }
+    navigate("/admin/OrderList");
   };
 
-  if (!order) return null;
+  if (!order) return <p className="text-center mt-20">กำลังโหลดข้อมูลการโอน...</p>;
 
   return (
     <div className="flex h-screen">
-      <AdminOrderSidebarr />
+      <AdminOrderSidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <AdminHeader activePage="orders" />
@@ -59,7 +70,7 @@ export default function AdminOrderManage() {
                 <label className="block mb-1 font-medium">ชื่อผู้สั่งซื้อ</label>
                 <input
                   type="text"
-                  value={order.customerName}
+                  value={order.name}
                   readOnly
                   className="w-full px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-800 dark:text-gray-300"
                 />
@@ -69,7 +80,7 @@ export default function AdminOrderManage() {
                 <label className="block mb-1 font-medium">อีเมล</label>
                 <input
                   type="text"
-                  value={order.email}
+                  value={order.email_id}
                   readOnly
                   className="w-full px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-800 dark:text-gray-300"
                 />
@@ -100,7 +111,7 @@ export default function AdminOrderManage() {
                 <label className="block mb-1 font-medium">วันที่ทำรายการ</label>
                 <input
                   type="text"
-                  value={order.orderDate}
+                  value={new Date(order.orderDate).toLocaleString()}
                   readOnly
                   className="w-full px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-800 dark:text-gray-300"
                 />
@@ -125,7 +136,7 @@ export default function AdminOrderManage() {
                 <label className="block mb-1 font-medium">หลักฐานการโอน (transferSlip)</label>
                 {order.transferSlip ? (
                   <img
-                    src={order.transferSlip}
+                    src={`${API_URL}${order.transferSlip}`}
                     alt="Transfer Slip"
                     className="mt-3 max-h-80 object-contain rounded-md border"
                   />

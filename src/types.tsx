@@ -29,3 +29,18 @@ export interface CustomProductInput {
   notes?: string;
   customImage?: File | null;
 }
+
+export interface Order {
+  id: number;
+  name: string;
+  email_id: string;
+  productName: string;
+  quantities: number | string;
+  orderStatus: string;
+  orderDate: string;
+}
+
+export interface OrderFull extends Order {
+  totalPrice: string;
+  transferSlip?: string;
+}

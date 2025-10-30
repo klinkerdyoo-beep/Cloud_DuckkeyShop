@@ -5,6 +5,8 @@ import bg1 from "../assets/img/bg1.png";
 import { Link } from "react-router-dom";
 import { useCart } from "../hooks/useCart";
 
+import noImg from "../assets/img/no-img-rec.png";
+
 const API_URL = import.meta.env.VITE_API_URL;
 // fetch(`${API_URL}/api/products/`)
 
@@ -39,7 +41,7 @@ export default function CartPage() {
               className="flex items-center bg-white/90 p-4 rounded-2xl shadow"
             >
               <img
-                src={`${API_URL}${item.imgURL || ""}`}
+                src={item.imgURL ? `${API_URL}${item.imgURL}` : noImg}
                 alt={item.productName}
                 className="w-24 h-24 object-cover rounded border"
               />

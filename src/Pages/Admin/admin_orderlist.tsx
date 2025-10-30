@@ -4,50 +4,36 @@ import "./admin.css";
 import AdminOrderSidebar from "./admin_sidebar_order";
 import AdminHeader from "./admin_header";
 
+const API_URL = import.meta.env.VITE_API_URL;
+import type { Order } from "../../types";
+
+
 
 export default function AdminOrderList() {
   const [search, setSearch] = useState("");
+  const [orders, setOrders] = useState<Order[]>([]);
 
-  // Mock
-  const orders = [
-    {
-      id: 1,
-      name: "ซ้อเนย",
-      email: "klinkerdyoo@kmitl.ac.th",
-      product: "Strawberry Hug Toast",
-      quantity: "2 ชิ้น",
-      status: "รอตรวจสอบ",
-      date: "2025-05-14 15:34:44",
-    },
-    {
-      id: 2,
-      name: "ซ้อเนย",
-      email: "klinkerdyoo@kmitl.ac.th",
-      product: "Strawberry Hug Toast",
-      quantity: "2 ชิ้น",
-      status: "ตรวจสอบแล้ว",
-      date: "2025-05-14 15:34:44",
-    },
-    {
-      id: 3,
-      name: "ซ้อเนย",
-      email: "klinkerdyoo@kmitl.ac.th",
-      product: "Strawberry Hug Toast",
-      quantity: "2 ชิ้น",
-      status: "ไม่อนุมัติ",
-      date: "2025-05-14 15:34:44",
-    },
-    {
-      id: 4,
-      name: "ซ้อเนย",
-      email: "klinkerdyoo@kmitl.ac.th",
-      product: "Strawberry Hug Toast",
-      quantity: "2 ชิ้น",
-      status: "รอตรวจสอบ",
-      date: "2025-05-14 15:34:44",
-    },
-  ];
+  useEffect(() => {
 
+    fetch(`${API_URL}/api/orders`)
+      .then((res) => res.json())
+      .then((data) => setOrders(data))
+      .catch((err) => console.error("Failed to fetch orders:", err));
+  }, []);
+
+  // search
+  const filteredOrders = orders.filter(order =>
+    (order.name?.toLowerCase() ?? "").includes(search.toLowerCase()) ||
+    (order.email_id?.toLowerCase() ?? "").includes(search.toLowerCase()) ||
+    (order.productName?.toLowerCase() ?? "").includes(search.toLowerCase())
+  );
+
+
+
+  // status
+  const pendingCount = orders.filter(order => order.orderStatus === "รอตรวจสอบ").length;
+  const approvedCount = orders.filter(order => order.orderStatus === "ตรวจสอบแล้ว").length;
+  const rejectedCount = orders.filter(order => order.orderStatus === "ไม่อนุมัติ").length;
   const getStatusColor = (status: string) => {
     switch (status) {
       case "รอตรวจสอบ":
@@ -78,19 +64,19 @@ export default function AdminOrderList() {
             {/* Summary boxes */}
             <div className="flex flex-wrap gap-4 mb-8">
               <div className="flex-1 min-w-[200px] bg-yellow-400 p-4 rounded-lg shadow text-black">
-                <p className="text-2xl font-bold">5</p>
+                <p className="text-2xl font-bold">{pendingCount}</p>
                 <p className="flex items-center gap-1">
                   การโอนที่รอตรวจสอบ <span className="material-icons">schedule</span>
                 </p>
               </div>
               <div className="flex-1 min-w-[200px] bg-green-500 p-4 rounded-lg shadow text-white">
-                <p className="text-2xl font-bold">20</p>
+                <p className="text-2xl font-bold">{approvedCount}</p>
                 <p className="flex items-center gap-1">
                   การโอนที่ตรวจสอบแล้ว <span className="material-icons">check_circle</span>
                 </p>
               </div>
               <div className="flex-1 min-w-[200px] bg-red-500 p-4 rounded-lg shadow text-white">
-                <p className="text-2xl font-bold">2</p>
+                <p className="text-2xl font-bold">{rejectedCount}</p>
                 <p className="flex items-center gap-1">
                   การโอนที่ไม่อนุมัติ <span className="material-icons">cancel</span>
                 </p>
@@ -126,32 +112,41 @@ export default function AdminOrderList() {
                   </tr>
                 </thead>
                 <tbody>
-                  {orders.map((order) => (
-                    <tr key={order.id} className="border-b border-gray-200 dark:border-gray-700">
-                      <td className="p-3">
-                        <div className="font-semibold">{order.name}</div>
-                        <div className="text-xs text-gray-500">{order.email}</div>
-                      </td>
-                      <td className="p-3">
-                        {order.product}
-                        <div className="text-xs text-gray-500">{order.quantity}</div>
-                      </td>
-                      <td className="p-3">
-                        <span className={`px-3 py-1 rounded-md text-xs font-semibold ${getStatusColor(order.status)}`}>
-                          {order.status}
-                        </span>
-                      </td>
-                      <td className="p-3 text-sm text-gray-500">{order.date}</td>
-                      <td className="p-3 text-right">
-                        <Link
+                  {filteredOrders.length > 0 ? (
+                    filteredOrders.map((order) => (
+                      <tr key={order.id} className="border-b border-gray-200 dark:border-gray-700">
+                        <td className="p-3">
+                          <div className="font-semibold">{order.name}</div>
+                          <div className="text-xs text-gray-500">{order.email_id}</div>
+                        </td>
+                        <td className="p-3">
+                          {order.productName}
+                          <div className="text-xs text-gray-500">{order.quantities}</div>
+                        </td>
+                        <td className="p-3">
+                          <span className={`px-3 py-1 rounded-md text-xs font-semibold ${getStatusColor(order.orderStatus)}`}>
+                            {order.orderStatus}
+                          </span>
+                        </td>
+                        <td className="p-3 text-sm text-gray-500">{new Date(order.orderDate).toLocaleString()}</td>
+                        <td className="p-3 text-right">
+                          <Link
                             to={`/admin/order/${order.id}`}
                             className="bg-gray-200 text-gray-800 px-4 py-1 rounded-md text-sm font-medium hover:bg-gray-300"
-                            >
+                          >
                             จัดการ
-                        </Link>
+                          </Link>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="text-center p-4 text-gray-500">
+                        ไม่พบรายการที่ค้นหา
                       </td>
                     </tr>
-                  ))}
+                  )}
+
                 </tbody>
               </table>
             </div>

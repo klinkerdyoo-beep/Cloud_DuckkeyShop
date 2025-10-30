@@ -437,7 +437,95 @@ app.post("/api/cart/add-custom", uploadCustom.single("customImage"), async (req,
   }
 });
 
+// order
+const query_orders = `
+  SELECT 
+    o.id,
+    o.name,
+    o.email_id,
+    oi."productName",
+    oi.quantities,
+    o."orderStatus" ,
+    o."orderDate"
+  FROM main_order o
+  LEFT JOIN main_orderitem oi ON o.id = oi.order_id
+  ORDER BY o."orderDate" DESC
+`;
 
+app.get("/api/orders", async (req, res) => {
+  try {
+    const result = await pool.query(query_orders);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Database error:", err);
+    res.status(500).json({ error: "Orders: Failed to fetch" });
+  }
+});
+
+app.get("/api/orders/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      `
+        SELECT 
+          o.id,
+          o.name,
+          o.email_id,
+          o."orderStatus",
+          o."orderDate",
+          json_agg(
+            json_build_object(
+              'productName', oi."productName",
+              'quantities', oi.quantities
+            )
+          ) AS items,
+          p."totalPrice",
+          p."transferSlip",
+          p."paymentDate"
+        FROM main_order o
+        LEFT JOIN main_orderitem oi ON o.id = oi.order_id
+        LEFT JOIN main_paymentdetail p ON o.id = p.order_id
+        WHERE o.id = $1
+        GROUP BY o.id, p."totalPrice", p."transferSlip", p."paymentDate"
+      `
+      , [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Database error:", err);
+    res.status(500).json({ error: "Failed to fetch this order" });
+  }
+});
+
+app.put("/api/orders/:id", async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  if (!status) {
+    return res.status(400).json({ error: "Status is required" });
+  }
+
+  try {
+    const result = await pool.query(
+      `UPDATE main_order
+       SET "orderStatus" = $1
+       WHERE id = $2
+       RETURNING id, "orderStatus"`,
+      [status, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    res.json({ message: "Status updated", order: result.rows[0] });
+  } catch (err) {
+    console.error("Database error:", err);
+    res.status(500).json({ error: "Failed to update status" });
+  }
+});
 
 
 // Upload product
