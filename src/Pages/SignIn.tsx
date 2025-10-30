@@ -93,7 +93,7 @@ export default function Login(){
                         {/* ลิงก์ Sign up */}
                         <p className="text-center text-gray-600 text-lg mt-6">
                             Don't have an account? 
-                            <a href="/singup" className="text-black font-bold hover:text-red-500">
+                            <a href="/signup" className="text-black font-bold hover:text-red-500">
                                 Sign up
                             </a>
                         </p>
