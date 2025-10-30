@@ -22,7 +22,7 @@ export default function AdminOrderList() {
   }, []);
 
   // search
-  const filteredOrders = orders.filter(order =>
+  const searchedItems = orders.filter(order =>
     (order.name?.toLowerCase() ?? "").includes(search.toLowerCase()) ||
     (order.email_id?.toLowerCase() ?? "").includes(search.toLowerCase()) ||
     (order.productName?.toLowerCase() ?? "").includes(search.toLowerCase())
@@ -112,8 +112,8 @@ export default function AdminOrderList() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredOrders.length > 0 ? (
-                    filteredOrders.map((order) => (
+                  {searchedItems.length > 0 ? (
+                    searchedItems.map((order) => (
                       <tr key={order.id} className="border-b border-gray-200 dark:border-gray-700">
                         <td className="p-3">
                           <div className="font-semibold">{order.name}</div>

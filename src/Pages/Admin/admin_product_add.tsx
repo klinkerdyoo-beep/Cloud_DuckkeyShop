@@ -63,7 +63,20 @@ export default function AdminProductAdd() {
         body: formData,
       });
       if (!res.ok) throw new Error("Failed to add product");
-      alert("เพิ่มสินค้าเรียบร้อยแล้ว!");
+      const data = await res.json();
+      alert(`เพิ่มสินค้าสำเร็จ\n` +
+            `ชื่อสินค้า: ${productName}\n` +
+            `รหัส: ${data.productID}\n`);
+    setProductName("");
+    setPrice("");
+    setDescription("");
+    setSize("");
+    setMaterial("");
+    setCategory("");
+    setStock("1");
+    setImageFile(null);
+    setPreviewSrc(null);
+    setAvailable(true);
     } catch (error) {
       console.error("Error adding product:", error);
     }

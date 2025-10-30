@@ -112,19 +112,6 @@ app.get("/api/products/:id", async (req, res) => {
   }
 });
 
-app.get("/api/categories", async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT * FROM main_productcategory
-      `);
-    res.json(result.rows);
-  } catch (err) {
-    console.error("Database error:", err);
-    res.status(500).json({ error: " Categories: Failed to fetch" });
-  }
-});
-
-
 // Add product
 const productStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/products"),
@@ -256,6 +243,66 @@ app.delete("/api/products/:id", async (req, res) => {
   }
 });
 
+
+// categories
+app.get("/api/categories", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT * FROM main_productcategory
+      ORDER BY id DESC;
+      `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Database error:", err);
+    res.status(500).json({ error: " Categories: Failed to fetch" });
+  }
+});
+
+app.post("/api/categories", async (req, res) => {
+  try {
+    const { categoryName, description } = req.body;
+
+    if (!categoryName || categoryName.trim() === "") {
+      return res.status(400).json({ error: "Category name is required" });
+    }
+
+    const query = `
+      INSERT INTO main_productcategory ("categoryName", description)
+      VALUES ($1, $2)
+      RETURNING *;
+    `;
+
+    const result = await pool.query(query, [categoryName.trim(), description || null]);
+    res.status(201).json({ message: "Category added successfully", category: result.rows[0] });
+
+  } catch (err) {
+    console.error("Error adding category:", err);
+    res.status(500).json({ error: "Failed to add category" });
+  }
+});
+
+app.delete("/api/categories/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const query = `
+      DELETE FROM main_productcategory
+      WHERE id = $1
+      RETURNING *;
+    `;
+
+    const result = await pool.query(query, [id]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Category not found" });
+    }
+
+    res.json({ message: "Category deleted successfully", deleted: result.rows[0] });
+  } catch (err) {
+    console.error("Error deleting category:", err);
+    res.status(500).json({ error: "Failed to delete category" });
+  }
+});
 
 
 

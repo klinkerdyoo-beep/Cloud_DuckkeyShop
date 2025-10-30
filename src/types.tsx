@@ -30,6 +30,12 @@ export interface CustomProductInput {
   customImage?: File | null;
 }
 
+export interface Category {
+  id: number;
+  categoryName: string;
+  description?: string;
+}
+
 export interface Order {
   id: number;
   name: string;

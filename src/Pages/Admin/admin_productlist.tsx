@@ -17,6 +17,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 // fetch(`${API_URL}/api/products/`)
 
 export default function AdminProductList() {
+  const [search, setSearch] = useState("");
   const [products, setProducts] = useState<ProductFull[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,6 +38,9 @@ export default function AdminProductList() {
     fetchProducts();
   }, []);
 
+  const searchedItems = products.filter(products =>
+    (products.productName?.toLowerCase() ?? "").includes(search.toLowerCase())
+  );
   // loading
   if (loading) {
     return (
@@ -62,12 +66,14 @@ export default function AdminProductList() {
 
             {/* Search */}
             <div className="mb-6">
-              <div className="relative">
+              <div className="relative w-full md:w-1/3">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
                   <span className="material-icons text-gray-400">search</span>
                 </span>
                 <input
-                  className="w-full md:w-1/3 py-2 pl-10 pr-4 text-text-light bg-card-light border border-gray-300 rounded-md dark:bg-card-dark dark:text-text-dark dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full py-2 pl-10 pr-4 text-text-light bg-card-light border border-gray-300 rounded-md dark:bg-card-dark dark:text-text-dark dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="Search"
                   type="text"
                 />
@@ -76,7 +82,8 @@ export default function AdminProductList() {
 
             {/* Product Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {products.map((product) => (
+              {searchedItems.length > 0 ? (
+                    searchedItems.map((product) => (
                 <div
                   key={product.productID}
                   className="bg-white bg-card-dark text-text-dark rounded-lg shadow-lg overflow-hidden"
@@ -147,7 +154,14 @@ export default function AdminProductList() {
                     </div>
                   </div>
                 </div>
-              ))}
+              ))
+            ) : (
+              <tr>
+                <td colSpan={5} className="text-center p-4 text-gray-500">
+                  ไม่พบรายการที่ค้นหา
+                </td>
+              </tr>
+            )}
             </div>
           </div>
         </main>

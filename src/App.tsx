@@ -24,6 +24,7 @@ import AdminProductAdd from './Pages/Admin/admin_product_add';
 import AdminProductEdit from './Pages/Admin/admin_product_edit';
 import AdminOrderList from './Pages/Admin/admin_orderlist';
 import AdminOrderManage from './Pages/Admin/admin_order_manage';
+import AdminCategoryAdd from './Pages/Admin/admin_category_add';
 
 function App() {
   return (
@@ -56,9 +57,12 @@ function App() {
         <Route path="/admin/ProductList" element={<AdminProductList />} />
         <Route path="/admin/ProductDelete" element={<AdminProductDelete />} />
         <Route path="/admin/ProductAdd" element={<AdminProductAdd />} />
+        <Route path="/admin/ProductEdit/:id" element={<AdminProductEdit />} />
+
         <Route path="/admin/OrderList" element={<AdminOrderList />} />
         <Route path="/admin/order/:id" element={<AdminOrderManage />} />
-        <Route path="/admin/ProductEdit/:id" element={<AdminProductEdit />} />
+
+        <Route path="/admin/CategoryAdd" element={<AdminCategoryAdd />} />
 
         <Route path="/login" element={<SingInPage />} />
         <Route path="/signup" element={<SingUpPage />} />

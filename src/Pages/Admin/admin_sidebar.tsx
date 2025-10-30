@@ -30,10 +30,10 @@ export default function AdminSidebar() {
             เพิ่มรายการสินค้า
           </Link>
           <Link
-            to="/admin/ProductDelete"
+            to="/admin/CategoryAdd"
             className="block px-4 py-2 mt-2 text-sm font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white"
           >
-            ลบรายการสินค้า
+            เพิ่มหมวดหมู่สินค้า
           </Link>
         </div>
       </nav>
