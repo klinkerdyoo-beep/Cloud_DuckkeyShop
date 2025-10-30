@@ -6,6 +6,7 @@ export interface Product {
     size?: string;
     material?: string;
     imgURL?: string;
+    category_id?: string;
 }
 export interface ProductFull extends Product {
     addedDate: string;

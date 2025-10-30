@@ -34,6 +34,63 @@ uploadDirs.forEach((dir) => {
 });
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+
+// User
+app.get('/api/users', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM main_userinfo');
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+// sign up
+app.post('/api/signup', async (req, res) => {
+    const { username, name, email, password, phone, gender, dob, profileImage } = req.body;
+    try {
+        const query = `
+            INSERT INTO main_userinfo (username, name, email, password, phone, gender, dob, "profileImage")
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING *;
+        `;
+        const values = [username, name, email, password, phone, gender, dob, profileImage];
+        const result = await pool.query(query, values);
+        res.json({ message: 'Signup successful', user: result.rows[0] });
+    } catch (err: any) {
+        console.error(err);
+        res.status(400).json({ message: err.detail || 'Signup failed' });
+    }
+});
+
+app.post('/api/login', async (req, res) => {
+    const { email, password } = req.body;
+
+    try {
+        const result = await pool.query(
+            'SELECT * FROM main_userinfo WHERE email = $1 AND password = $2',
+            [email, password]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(401).json({ message: 'Invalid email or password' });
+        }
+
+        const user = result.rows[0];
+        delete user.password;
+
+        res.json({ message: 'Login successful', user });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
+app.post('/api/logout', (req, res) => {
+    res.json({ message: 'Logout successful' });
+});
+
 const query_products = `
       SELECT 
         p.*,
@@ -251,6 +308,18 @@ app.get("/api/categories", async (req, res) => {
       SELECT * FROM main_productcategory
       ORDER BY id DESC;
       `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Database error:", err);
+    res.status(500).json({ error: " Categories: Failed to fetch" });
+  }
+});
+app.get("/api/categories/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(`
+      SELECT * FROM main_productcategory
+      WHERE id=$1;`, [id]);
     res.json(result.rows);
   } catch (err) {
     console.error("Database error:", err);

@@ -4,19 +4,48 @@ import bg1 from '../assets/img/bg1.png'
 import logo from "../assets/img/logo-duckkey.png";
 import DuckBig from "../assets/img/duck-big.png";
 import { useState } from "react"; 
+import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Signup(){
     // 1. จัดการ State สำหรับช่องกรอกข้อมูล (ตามรูปภาพ Sign Up)
+    const [username, setUsername] = useState('');
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [phone, setPhone] = useState(''); // *** Added phone field ***
+    const [gender, setGender] = useState(''); // *** Added gender field ***
+    const [dob, setDob] = useState(''); // *** Added dob field ***
     // const [agreed, setAgreed] = useState(false); // สำหรับ Checkbox
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Signup attempt with:', { firstName, lastName, email, password });
-        // *** เพิ่ม logic การสมัครสมาชิกที่นี่ ***
+        const fullName = `${firstName} ${lastName}`; //  Combine first + last name for 'name' column
+        console.log('Signup attempt with:', { fullName, email, password, phone, gender, dob });
+
+        try {
+            const response = await axios.post(`${API_URL}/api/signup`, {
+                username,
+                name: fullName,
+                email,
+                password,
+                phone,
+                gender,
+                dob,
+                profileImage: null // just in case for adding this later
+            });
+            console.log('Server response:', response.data);
+            alert('Signup successful!');
+            const user = response.data.user;
+            localStorage.setItem('user', JSON.stringify(user));
+            window.location.href = '/';
+            
+        } catch (err: any) {
+            console.error(err);
+            alert('Signup failed: ' + err.response?.data?.message || err.message);
+        }
     };
 
     return (
@@ -57,6 +86,18 @@ export default function Signup(){
                         
                         <form className="space-y-4" onSubmit={handleSubmit}> {/* ปรับ space-y-4 เล็กน้อยให้ช่องกรอกเยอะขึ้น */}
                             
+                            {/* ช่องกรอก username */}
+                            <div>
+                                <input 
+                                    type="text" 
+                                    placeholder="username" 
+                                    className="w-full p-3 border-2 border-gray-300 focus:border-red-400 focus:ring-1 focus:ring-red-400 text-lg " 
+                                    required
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                />
+                            </div>
+
                             {/* ช่องกรอก First Name */}
                             <div>
                                 <input 
@@ -80,7 +121,7 @@ export default function Signup(){
                                     onChange={(e) => setLastName(e.target.value)}
                                 />
                             </div>
-                            
+
                             {/* ช่องกรอก Email */}
                             <div>
                                 <input 
@@ -92,7 +133,7 @@ export default function Signup(){
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
                             </div>
-                            
+
                             {/* ช่องกรอก Password */}
                             <div>
                                 <input 
@@ -105,19 +146,41 @@ export default function Signup(){
                                 />
                             </div>
 
-                            {/* <div className="flex items-center pt-2">
+                            {/* ช่องกรอก Phone */}
+                            <div>
                                 <input 
-                                    id="condition-checkbox"
-                                    type="checkbox" 
-                                    className="w-5 h-5 text-black border-gray-300 rounded focus:ring-red-400" 
-                                    checked={agreed}
-                                    onChange={(e) => setAgreed(e.target.checked)}
+                                    type="tel" 
+                                    placeholder="Phone Number" 
+                                    className="w-full p-3 border-2 border-gray-300 focus:border-red-400 focus:ring-1 focus:ring-red-400 text-lg " 
+                                    value={phone}
+                                    onChange={(e) => setPhone(e.target.value)}
                                 />
-                                <label htmlFor="condition-checkbox" className="ml-2 text-base text-gray-700">
-                                    some condition
-                                </label>
-                            </div> */}
-                            
+                            </div>
+
+                            {/* ช่องกรอก Gender */}
+                            <div>
+                                <select
+                                    className="w-full p-3 border-2 border-gray-300 focus:border-red-400 focus:ring-1 focus:ring-red-400 text-lg"
+                                    value={gender}
+                                    onChange={(e) => setGender(e.target.value)}
+                                >
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            {/* ช่องกรอก Date of Birth */}
+                            <div>
+                                <input 
+                                    type="date" 
+                                    className="w-full p-3 border-2 border-gray-300 focus:border-red-400 focus:ring-1 focus:ring-red-400 text-lg " 
+                                    value={dob}
+                                    onChange={(e) => setDob(e.target.value)}
+                                />
+                            </div>
+
                             {/* ปุ่ม Sign up สีดำ */}
                             <button 
                                 type="submit" 

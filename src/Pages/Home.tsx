@@ -61,12 +61,13 @@ export default function App() {
         <div className="mt-3 mb-6 border border-dashed border-gray-700 rounded-2xl"></div>
         <div className="flex flex-wrap justify-center w-full gap-6">
           {categories.map((cat) => (
-            <div
+            <Link
               key={cat.id}
+              to={`/Product?category=${encodeURIComponent(cat.id)}`}
               className="p-5 bg-amber-200 border-2 rounded-2xl shadow hover:bg-amber-300 transition"
             >
               {cat.categoryName}
-            </div>
+            </Link>
           ))}
         </div>
       </div>

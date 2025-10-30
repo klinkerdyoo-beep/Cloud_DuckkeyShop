@@ -5,9 +5,9 @@ import Path from "../components/Path";
 import bg1 from "../assets/img/bg1.png";
 import noIMG from "../assets/img/no-img-rec.png";
 
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
-import type { Product } from "../types";
+import type { Product, Category } from "../types";
 
 const API_URL = import.meta.env.VITE_API_URL;
 // fetch(`${API_URL}/api/products/`)
@@ -15,6 +15,11 @@ const API_URL = import.meta.env.VITE_API_URL;
 export default function Shop() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [categoryInfo, setCategoryInfo] = useState<Category | null>(null); 
+
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const selectedCategory = searchParams.get("category");
 
   // fetch from backend
   useEffect(() => {
@@ -23,7 +28,23 @@ export default function Shop() {
         const res = await fetch(`${API_URL}/api/products/`);
         if (!res.ok) throw new Error("Failed to fetch products");
         const data = await res.json();
-        setProducts(data);
+
+        if (selectedCategory) {
+          const filtered = data.filter(
+            (p: Product) => p.category_id === selectedCategory
+          );
+          setProducts(filtered);
+
+        const catRes = await fetch(`${API_URL}/api/categories/${selectedCategory}`);
+          if (catRes.ok) {
+            const catDataArray = await catRes.json();
+            setCategoryInfo(catDataArray[0]);
+            console.log(`catData`, catDataArray[0]);
+          }
+        } else {
+            setProducts(data);
+            setCategoryInfo(null);
+        }
       } catch (err) {
         console.error("Error fetching products:", err);
       } finally {
@@ -31,7 +52,7 @@ export default function Shop() {
       }
     };
     fetchProducts();
-  }, []);
+  }, [selectedCategory]);
 
   // loading
   if (loading) {
@@ -51,10 +72,8 @@ export default function Shop() {
       <Path />
 
       <div className="p-10 py-10 justify-center bg-white/90 items-center w-full text-center">
-        <h1>Art Shop</h1>
-        <p>
-          Explore original paintings, sculptures, and handcrafted art pieces for your collection.
-        </p>
+        <h1>{categoryInfo ? categoryInfo.categoryName : "Art Shop"}</h1>
+        <p>{categoryInfo ? categoryInfo.description : "Explore original paintings, sculptures, and handcrafted art pieces for your collection."}</p>
       </div>
 
       <div className="flex">

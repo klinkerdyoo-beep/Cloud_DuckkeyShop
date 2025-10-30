@@ -1,23 +1,34 @@
-
 import Narbar from '../components/Narbar'
 import bg1 from '../assets/img/bg1.png'
 import logo from "../assets/img/logo-duckkey.png";
 import DuckBig from "../assets/img/duck-big.png";
 import { useState } from "react"; 
+import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Login(){
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         console.log('Login attempt with:', { email, password });
-        // เพิ่ม logic การตรวจสอบข้อมูลเข้าสู่ระบบที่นี่
+
+        try {
+            const response = await axios.post(`${API_URL}/api/login`, { email, password });
+            console.log('Login response:', response.data);
+
+            localStorage.setItem('user', JSON.stringify(response.data.user));
+            window.location.href = '/';
+        } catch (err: any) {
+            console.error(err);
+            alert('Login failed: ' + err.response?.data?.message || err.message);
+        }
     };
 
     return (
         <div className='text-black login-font'>
-            
             <div
                 style={{ backgroundImage: `url(${bg1})` }}
                 className="bg-cover bg-fixed bg-center min-h-screen"
@@ -28,7 +39,6 @@ export default function Login(){
                 <div className='flex flex-col items-center justify-center pt-5 pb-2 mt-20 min-h-[calc(100vh-150px)]'>
                     
                     {/* 1. มาสคอตเป็ดขนาดใหญ่ด้านบน (ต้องอยู่ก่อน Modal เพื่อให้ซ้อนทับได้สวยงาม) */}
-                    {/* เพิ่ม class ให้มากอสคอตลอยอยู่เหนือ Modal */}
                     <div className="mascot-header relative w-[400px] h-[400px] mb-[-11rem] "> 
                         <img 
                             src={DuckBig} 
@@ -41,7 +51,7 @@ export default function Login(){
                     <div className="login-modal bg-white  sm:p-10 rounded-xl shadow-2xl w-full max-w-sm z-10">
                         
                         {/* โลโก้ Duckkey */}
-                        <div className="logo-container text-center mb-6 pt-1"> {/* เพิ่ม pt-10 เพื่อให้ Log-in Modal ถูกเลื่อนลง */}
+                        <div className="logo-container text-center mb-6 pt-1">
                             <img src={logo} alt="Duckkey Logo" className="w-[100px] h-auto mx-auto" />
                         </div>
                         
@@ -51,7 +61,6 @@ export default function Login(){
                         </h2>
                         
                         <form className="space-y-5" onSubmit={handleSubmit}>
-                            {/* ช่องกรอก Email พร้อมการจัดการ State */}
                             <div>
                                 <input 
                                     type="email" 
@@ -63,7 +72,6 @@ export default function Login(){
                                 />
                             </div>
                             
-                            {/* ช่องกรอก Password พร้อมการจัดการ State */}
                             <div>
                                 <input 
                                     type="password" 
@@ -74,12 +82,6 @@ export default function Login(){
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
                             </div>
-                            
-                            {/* <div className="text-right text-base pt-1">
-                                <a href="#" className="text-gray-500 hover:text-red-500 hover:underline">
-                                    Forgot password?
-                                </a>
-                            </div> */}
                             
                             {/* ปุ่ม Log-in สีดำ */}
                             <button 

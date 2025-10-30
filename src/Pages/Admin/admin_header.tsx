@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { FaHome } from "react-icons/fa"
 
 interface AdminHeaderProps {
   activePage: "orders" | "products";
@@ -33,25 +34,13 @@ export default function AdminHeader({ activePage }: AdminHeaderProps) {
         </div>
 
         <div className="flex items-center">
-          {/* Profile Icon */}
+          {/* Home Icon */}
           <li className="relative group cursor-pointer">
             <Link
-              to="/LoginAccount"
+              to="/"
               className="flex items-center text-gray-600 hover:text-amber-500 transition"
             >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                ></path>
-              </svg>
+              <FaHome className="w-6 h-6" />
             </Link>
             {/* Dropdown */}
             <ul className="absolute right-0 top-full mt-2 w-40 bg-white border rounded-lg shadow-lg opacity-0 max-h-0 overflow-hidden transition-all duration-300 group-hover:opacity-100 group-hover:max-h-96">
