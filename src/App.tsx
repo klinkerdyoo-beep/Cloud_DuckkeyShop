@@ -14,6 +14,8 @@ import CartPage from './Pages/Cart';
 import Cart2Page from './Pages/Cart2';
 import CheckoutPage from './Pages/Checkout';
 import CustomProductPage from './Pages/CustomizeKeycap';
+import SingInPage from './Pages/SignIn';
+import SingUpPage from './Pages/SignUp';
 // ... นำเข้ารูปภาพต่างๆ ที่ใช้ร่วมกัน ...
 //admin pages
 import AdminProductList from './Pages/Admin/admin_productlist';
@@ -57,6 +59,9 @@ function App() {
         <Route path="/admin/OrderList" element={<AdminOrderList />} />
         <Route path="/admin/order/:id" element={<AdminOrderManage />} />
         <Route path="/admin/ProductEdit/:id" element={<AdminProductEdit />} />
+
+        <Route path="/login" element={<SingInPage />} />
+        <Route path="/signup" element={<SingUpPage />} />
 
         <Route path="*" element={<h1>404 Not Found</h1>} />
       </Routes>

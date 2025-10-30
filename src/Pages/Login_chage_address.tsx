@@ -5,10 +5,7 @@ import bg1 from '../assets/img/bg1.png'
 import { useEffect, useState } from "react";
 
 export default function Login(){
-
-
     
-
     return (
         <div className='text-black'>
             <div
