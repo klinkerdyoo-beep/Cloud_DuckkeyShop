@@ -753,12 +753,17 @@ app.get("/api/orders/:id", async (req, res) => {
           o.id,
           o.name,
           o.email_id,
+          o.phone,
+          o.address,
           o."orderStatus",
           o."orderDate",
           json_agg(
             json_build_object(
               'productName', oi."productName",
-              'quantities', oi.quantities
+              'quantities', oi.quantities,
+              'custom_product_id', oi."custom_product_id",
+              'product_id', oi."product_id",
+              'customValue', oi."customValue"
             )
           ) AS items,
           p."totalPrice",
@@ -769,17 +774,23 @@ app.get("/api/orders/:id", async (req, res) => {
         LEFT JOIN main_paymentdetail p ON o.id = p.order_id
         WHERE o.id = $1
         GROUP BY o.id, p."totalPrice", p."transferSlip", p."paymentDate"
-      `
-      , [id]);
+      `,
+      [id]
+    );
+
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Order not found" });
     }
+
     res.json(result.rows[0]);
   } catch (err) {
     console.error("Database error:", err);
     res.status(500).json({ error: "Failed to fetch this order" });
   }
 });
+
+
+
 
 app.put("/api/orders/:id", async (req, res) => {
   const { id } = req.params;
