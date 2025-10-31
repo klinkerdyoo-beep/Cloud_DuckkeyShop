@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import Narbar from '../components/Narbar';
 import Path from '../components/Path';
 import bg1 from '../assets/img/bg1.png';
 import noImg from "../assets/img/no-img-rec.png";
 import type { CartItem } from "../types";
+
+import { useUser } from "../contexts/UserContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -22,6 +24,8 @@ interface Address {
 }
 
 export default function Checkout() {
+    const { user } = useUser();
+    const navigate = useNavigate();
   const [total, setTotal] = useState(0);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
@@ -86,60 +90,81 @@ export default function Checkout() {
 
   const handleConfirmOrder = async () => {
     const addressToUse = selectedAddressId
-      ? addresses.find((a) => a.id === selectedAddressId)
-      : manualAddress;
+        ? addresses.find((a) => a.id === selectedAddressId)
+        : manualAddress;
 
     if (!addressToUse) {
-      alert("Please fill in or select an address before confirming.");
-      return;
+        alert("Please fill in or select an address before confirming.");
+        return;
     }
 
     if (!selectedFile) {
-      alert("Please upload payment evidence.");
-      return;
+        alert("Please upload payment evidence.");
+        return;
     }
 
     try {
-      // 1. Create order in main_order
-      const orderRes = await fetch(`${API_URL}/api/orders`, {
+        const orderRes = await fetch(`${API_URL}/api/orders`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          orderDate: new Date().toISOString(),
-          orderStatus: "Pending",
-          totalPrice: total,
-          name: addressToUse.name,
-          phone: addressToUse.phone,
-          address: `${addressToUse.address}, ${addressToUse.subdistrict}, ${addressToUse.district}, ${addressToUse.province} ${addressToUse.postal_code}`,
-          email_id: "", // Add if available
-          parcelStatus: "Not Shipped",
-          items: selectedItems, // Backend should handle order items if needed
+            orderDate: new Date().toISOString(),
+            orderStatus: "รอตรวจสอบ",
+            totalPrice: total,
+            name: addressToUse.name,
+            phone: addressToUse.phone,
+            address: `${addressToUse.address}, ${addressToUse.subdistrict}, ${addressToUse.district}, ${addressToUse.province} ${addressToUse.postal_code}`,
+            email_id: user?.email,
+            parcelStatus: "รอตรวจสอบ",
+            items: selectedItems,
         }),
-      });
+        });
 
-      const orderData = await orderRes.json();
-      const orderId = orderData.id;
+        const orderData = await orderRes.json();
 
-      // 2. Upload payment detail
-      const formData = new FormData();
-      formData.append("transferSlip", selectedFile);
-      formData.append("totalPrice", total.toString());
-      formData.append("paymentDate", new Date().toISOString());
-      formData.append("order_id", orderId.toString());;
+        if (!orderRes.ok) {
+        console.error("Order creation failed:", orderData);
+        alert(orderData.error || "Failed to create order.");
+        return;
+        }
 
-      await fetch(`${API_URL}/api/payment-details`, {
+        const orderId = orderData.id;
+        if (!orderId) {
+        console.error("Order ID missing:", orderData);
+        alert("Server didn’t return an order ID.");
+        return;
+        }
+
+        // 2. Upload payment slip
+        const formData = new FormData();
+        formData.append("transferSlip", selectedFile);
+        formData.append("totalPrice", total.toString());
+        formData.append("paymentDate", new Date().toISOString());
+        formData.append("order_id", orderId.toString());
+
+        const payRes = await fetch(`${API_URL}/api/payment-details`, {
         method: "POST",
         body: formData,
         credentials: "include",
-      });
+        });
 
-      alert("Order and payment evidence submitted successfully!");
+        const payData = await payRes.json();
+
+        if (!payRes.ok) {
+        console.error("Payment failed:", payData);
+        alert(payData.error || "Failed to upload payment evidence.");
+        return;
+        }
+
+        alert("Order and payment submitted successfully!");
+        navigate("/Cart");
     } catch (err) {
-      console.error("Error submitting order:", err);
-      alert("Failed to submit order. Please try again.");
+        console.error("Error submitting order:", err);
+        alert("Unexpected error submitting order. Please try again.");
     }
-  };
+    };
+
 
   return (
     <div style={{ backgroundImage: `url(${bg1})` }} className="bg-cover bg-fixed bg-center min-h-screen">
