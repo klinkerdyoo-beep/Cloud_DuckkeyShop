@@ -5,7 +5,26 @@ import AdminHeader from "./admin_header";
 import "./admin.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
-import type { OrderFull } from "../../types";
+
+interface OrderItem {
+  productName: string;
+  quantities: number;
+  customValue?: string;
+  product_id?: string;
+  custom_product_id?: string;
+}
+
+interface OrderFull {
+  id: number;
+  name: string;
+  email_id: string;
+  orderStatus: string;
+  orderDate: string;
+  totalPrice: string;
+  transferSlip?: string;
+  items: OrderItem[];
+  status?: string;
+}
 
 export default function AdminOrderManage() {
   const { id } = useParams();
@@ -20,7 +39,7 @@ export default function AdminOrderManage() {
         if (!res.ok) throw new Error("Failed to fetch order");
         const data = await res.json();
         setOrder(data);
-        setStatus(data.status);
+        setStatus(data.orderStatus);
       } catch (err) {
         console.error("Error fetching order:", err);
         alert("ไม่สามารถดึงข้อมูลการโอนนี้ได้");
@@ -89,13 +108,42 @@ export default function AdminOrderManage() {
               {/* Order Info */}
               <div>
                 <label className="block mb-1 font-medium">รายการสินค้า</label>
-                <input
-                  type="text"
-                  value={`${order.productName} (${order.quantities})`}
-                  readOnly
-                  className="w-full px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-800 dark:text-gray-300"
-                />
+                <div className="p-2 border rounded-md bg-gray-100 dark:bg-gray-800 dark:text-gray-300 space-y-1">
+                  {order.items.map((item, idx) => {
+                    if (item.custom_product_id && item.customValue) {
+                      // Split the customValue
+                      const [name, keyColor, textColor, size] = item.customValue.split("_");
+                      return (
+                        <div key={idx} className="flex flex-col">
+                          <span>
+                            <strong>Custom:</strong> {name} — ขนาด: {size}
+                          </span>
+                          <span className="flex items-center gap-2 text-sm">
+                            <span>Key Color: </span>
+                            <span
+                              style={{ backgroundColor: keyColor }}
+                              className="inline-block w-4 h-4 border"
+                            />
+                            <span>Text Color: </span>
+                            <span
+                              style={{ backgroundColor: textColor }}
+                              className="inline-block w-4 h-4 border"
+                            />
+                          </span>
+                          <span>จำนวน: {item.quantities}</span>
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <p key={idx}>
+                          <strong>{item.productName}</strong> — จำนวน: {item.quantities}
+                        </p>
+                      );
+                    }
+                  })}
+                </div>
               </div>
+
 
               <div>
                 <label className="block mb-1 font-medium">ราคารวม</label>

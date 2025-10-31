@@ -5,35 +5,50 @@ import AdminOrderSidebar from "./admin_sidebar_order";
 import AdminHeader from "./admin_header";
 
 const API_URL = import.meta.env.VITE_API_URL;
-import type { Order } from "../../types";
-
-
 
 export default function AdminOrderList() {
   const [search, setSearch] = useState("");
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
 
   useEffect(() => {
-
     fetch(`${API_URL}/api/orders`)
       .then((res) => res.json())
-      .then((data) => setOrders(data))
+      .then((data) => {
+        // ✅ Group orders by order.id
+        const grouped = Object.values(
+          data.reduce((acc: any, curr: any) => {
+            if (!acc[curr.id]) {
+              acc[curr.id] = {
+                ...curr,
+                products: [],
+              };
+            }
+            acc[curr.id].products.push({
+              name: curr.productName,
+              qty: curr.quantities,
+            });
+            return acc;
+          }, {})
+        );
+        setOrders(grouped);
+      })
       .catch((err) => console.error("Failed to fetch orders:", err));
   }, []);
 
-  // search
+  // ✅ search
   const searchedItems = orders.filter(order =>
     (order.name?.toLowerCase() ?? "").includes(search.toLowerCase()) ||
     (order.email_id?.toLowerCase() ?? "").includes(search.toLowerCase()) ||
-    (order.productName?.toLowerCase() ?? "").includes(search.toLowerCase())
+    order.products.some((p: any) =>
+      p.name?.toLowerCase().includes(search.toLowerCase())
+    )
   );
 
-
-
-  // status
+  // ✅ status counters
   const pendingCount = orders.filter(order => order.orderStatus === "รอตรวจสอบ").length;
   const approvedCount = orders.filter(order => order.orderStatus === "ตรวจสอบแล้ว").length;
   const rejectedCount = orders.filter(order => order.orderStatus === "ไม่อนุมัติ").length;
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "รอตรวจสอบ":
@@ -113,22 +128,31 @@ export default function AdminOrderList() {
                 </thead>
                 <tbody>
                   {searchedItems.length > 0 ? (
-                    searchedItems.map((order) => (
+                    searchedItems.map((order: any) => (
                       <tr key={order.id} className="border-b border-gray-200 dark:border-gray-700">
                         <td className="p-3">
                           <div className="font-semibold">{order.name}</div>
                           <div className="text-xs text-gray-500">{order.email_id}</div>
                         </td>
+
                         <td className="p-3">
-                          {order.productName}
-                          <div className="text-xs text-gray-500">{order.quantities}</div>
+                          {order.products.map((p: any, index: number) => (
+                            <div key={index}>
+                              {p.name} ({p.qty})
+                            </div>
+                          ))}
                         </td>
+
                         <td className="p-3">
                           <span className={`px-3 py-1 rounded-md text-xs font-semibold ${getStatusColor(order.orderStatus)}`}>
                             {order.orderStatus}
                           </span>
                         </td>
-                        <td className="p-3 text-sm text-gray-500">{new Date(order.orderDate).toLocaleString()}</td>
+
+                        <td className="p-3 text-sm text-gray-500">
+                          {new Date(order.orderDate).toLocaleString()}
+                        </td>
+
                         <td className="p-3 text-right">
                           <Link
                             to={`/admin/order/${order.id}`}
@@ -146,7 +170,6 @@ export default function AdminOrderList() {
                       </td>
                     </tr>
                   )}
-
                 </tbody>
               </table>
             </div>
