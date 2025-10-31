@@ -3,6 +3,7 @@ import Path from "../components/Path";
 import Narbar from "../components/Narbar";
 import Profile from "../components/Profile";
 import bg1 from "../assets/img/bg1.png";
+import noImg from "../assets/img/no-img-rec.png";
 
 interface OrderItem {
   id: number;
@@ -22,22 +23,22 @@ interface Order {
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-function Tap() {
-  return (
-    <div className="flex gap-5 text-gray-600">
-      {["All", "รอตรวจสอบ", "ที่ต้องได้รับ", "สำเร็จเเล้ว", "ยกเลิก"].map((t) => (
-        <h2
-          key={t}
-          className="text-lg font-medium mb-2 cursor-pointer transition-all duration-200 hover:text-red-600 relative pb-1.5
-            before:absolute before:bottom-0 before:left-0 before:h-0.5 before:w-full before:bg-red-600
-            before:scale-x-0 hover:before:scale-x-100 before:origin-center before:transition-transform before:duration-300"
-        >
-          {t}
-        </h2>
-      ))}
-    </div>
-  );
-}
+// function Tap() {
+//   return (
+//     <div className="flex gap-5 text-gray-600">
+//       {["All", "รอตรวจสอบ", "ที่ต้องได้รับ", "สำเร็จเเล้ว", "ยกเลิก"].map((t) => (
+//         <h2
+//           key={t}
+//           className="text-lg font-medium mb-2 cursor-pointer transition-all duration-200 hover:text-red-600 relative pb-1.5
+//             before:absolute before:bottom-0 before:left-0 before:h-0.5 before:w-full before:bg-red-600
+//             before:scale-x-0 hover:before:scale-x-100 before:origin-center before:transition-transform before:duration-300"
+//         >
+//           {t}
+//         </h2>
+//       ))}
+//     </div>
+//   );
+// }
 
 export default function OrderHistory() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -66,7 +67,7 @@ export default function OrderHistory() {
         <div className="flex flex-row bg-white/90">
           <Profile />
           <div className="flex flex-1 flex-col items-center gap-4 justify-center mb-10">
-            <Tap />
+            {/* <Tap /> */}
 
             <div className="p-10 w-full max-w-3xl">
               {Array.isArray(orders) && orders.length > 0 ? (
@@ -88,7 +89,7 @@ export default function OrderHistory() {
                             className="flex items-center gap-4 border-b pb-3 mb-3 last:border-none"
                             >
                             <img
-                                src={`${API_URL}${item.imgURL}` || "/placeholder.jpg"}
+                                src={item.imgURL ? `${API_URL}${item.imgURL}` : noImg}
                                 className="w-24 h-24 object-cover rounded-lg border"
                             />
                             <div className="flex-1">

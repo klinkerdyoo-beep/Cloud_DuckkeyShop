@@ -1,8 +1,11 @@
 import logo from "../assets/img/logo-duckkey.png";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import { useUser } from "../contexts/UserContext";
+import { HiOutlineLogin } from "react-icons/hi";
 
 export default function Navbar() {
+  const { user } = useUser();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -25,14 +28,14 @@ export default function Navbar() {
           <li><Link to="/CustomizeKeycap" className="hover:text-amber-500 transition">Customize Keycap</Link></li>
 
           {/* Dropdown Contact */}
-          <li className="relative group cursor-pointer">
+          {/* <li className="relative group cursor-pointer">
             Contact
             <ul className="absolute left-0 top-full mt-2 w-40 bg-white border rounded-lg shadow-lg opacity-0 max-h-0 overflow-hidden transition-all duration-300 group-hover:opacity-100 group-hover:max-h-96">
               <li className="p-2 hover:bg-amber-100 rounded">Email</li>
               <li className="p-2 hover:bg-amber-100 rounded">Phone</li>
               <li className="p-2 hover:bg-amber-100 rounded">Address</li>
             </ul>
-          </li>
+          </li> */}
         </ul>
 
         {/* Search + Icons */}
@@ -47,56 +50,89 @@ export default function Navbar() {
           </div>
 
           {/* Cart */}
-          <Link to="/Cart" className="text-gray-600 hover:text-amber-500 transition">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-            </svg>
-          </Link>
+            {user && (
+                <Link to="/Cart" className="text-gray-600 hover:text-amber-500 transition">
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                    />
+                  </svg>
+                </Link>
+              )}
 
-          {/* Profile Icon */}
-          <li className="relative group cursor-pointer">
-            <Link
-              to="/LoginAccount"
-              className="flex items-center text-gray-600 hover:text-amber-500 transition"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                ></path>
-              </svg>
-            </Link>
-            {/* Dropdown */}
-            <ul className="absolute left-0 top-full mt-2 w-40 bg-white border rounded-lg shadow-lg opacity-0 max-h-0 overflow-hidden transition-all duration-300 group-hover:opacity-100 group-hover:max-h-96">
-              <li className="p-2 hover:bg-amber-100 rounded">
-                <Link to="/LoginAccount">
-                  Account
+          {/* Profile / Login Icon */}
+            <li className="relative group cursor-pointer">
+              {user ? (
+                <>
+                  {/* Profile icon if logged in */}
+                  <Link
+                    to="/LoginAccount"
+                    className="flex items-center text-gray-600 hover:text-amber-500 transition"
+                  >
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
+                  </Link>
+
+                  {/* Dropdown for logged in user */}
+                  <ul className="absolute left-0 top-full mt-2 w-40 bg-white border rounded-lg shadow-lg opacity-0 max-h-0 overflow-hidden transition-all duration-300 group-hover:opacity-100 group-hover:max-h-96">
+                    <li className="p-2 hover:bg-amber-100 rounded">
+                      <Link to="/LoginAccount">Account</Link>
+                    </li>
+                    <li className="p-2 hover:bg-amber-100 rounded">
+                      <Link to="/LoginAddress">Address</Link>
+                    </li>
+                    <li className="p-2 hover:bg-amber-100 rounded">
+                      <Link to="/LoginOrderHistory">History</Link>
+                    </li>
+                    <li className="p-2 hover:bg-amber-100 rounded">
+                      <Link to="/admin/OrderList">Admin</Link>
+                    </li>
+                    <li className="p-2 hover:bg-amber-100 rounded cursor-pointer"
+                        onClick={async () => {
+                          try {
+                            await fetch(`${import.meta.env.VITE_API_URL}/api/logout`, {
+                              method: "POST",
+                              credentials: "include",
+                            });
+                            window.location.href = "/";
+                          } catch (err) {
+                            console.error("Logout failed:", err);
+                          }
+                        }}
+                    >
+                      Logout
+                    </li>
+                  </ul>
+                </>
+              ) : (
+                // Door icon if not logged in
+                <Link
+                  to="/Login"
+                  className="flex items-center text-gray-600 hover:text-amber-500 transition"
+                >
+                  <HiOutlineLogin className="w-6 h-6" />
                 </Link>
-              </li>
-              <li className="p-2 hover:bg-amber-100 rounded">
-                <Link to="/LoginAddress">
-                  Address
-                </Link>
-              </li>
-              <li className="p-2 hover:bg-amber-100 rounded">
-                <Link to="/LoginOrderHistory">
-                  History
-                </Link>
-              </li>
-              <li className="p-2 hover:bg-amber-100 rounded">
-                <Link to="/admin/OrderList">
-                  Admin
-                </Link>
-              </li>
-            </ul>
-          </li>
+              )}
+            </li>
 
 
           {/* Hamburger Menu (Mobile) */}
