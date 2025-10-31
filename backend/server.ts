@@ -5,8 +5,77 @@ import dotenv from "dotenv";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { S3Client } from "@aws-sdk/client-s3";
+import multerS3 from "multer-s3";
 
 dotenv.config();
+const s3 = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    sessionToken: process.env.AWS_SESSION_TOKEN,
+  },
+});
+
+const uploadS3 = multer({
+  storage: multerS3({
+    s3,
+    bucket: process.env.AWS_BUCKET_NAME!,
+    contentType: multerS3.AUTO_CONTENT_TYPE,
+    acl: "public-read",
+    key: (req, file, cb) => {
+      const timestamp = Date.now();
+      const ext = path.extname(file.originalname);
+      const filename = `${timestamp}-${Math.round(Math.random() * 1e9)}${ext}`;
+      cb(null, filename);
+    },
+  }),
+});
+
+const uploadProduct = multer({
+  storage: multerS3({
+    s3,
+    bucket: process.env.AWS_BUCKET_NAME!,
+    acl: "public-read",
+    contentType: multerS3.AUTO_CONTENT_TYPE,
+    key: (req, file, cb) => {
+      const timestamp = Date.now();
+      const ext = path.extname(file.originalname);
+      const filename = `products/${timestamp}-${Math.round(Math.random() * 1e9)}${ext}`;
+      cb(null, filename);
+    },
+  }),
+});
+
+const upload = multer({
+  storage: multerS3({
+    s3,
+    bucket: process.env.AWS_BUCKET_NAME!,
+    acl: "public-read",
+    contentType: multerS3.AUTO_CONTENT_TYPE,
+    key: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+      const ext = path.extname(file.originalname);
+      cb(null, `slips/${uniqueSuffix}${ext}`);
+    },
+  }),
+});
+
+const uploadCustom = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: process.env.AWS_BUCKET_NAME!,
+    acl: "public-read",
+    key: (req, file, cb) => {
+      const filename = `custom_products/${Date.now()}-${Math.round(Math.random() * 1e9)}-${file.originalname}`;
+      cb(null, filename);
+    },
+  }),
+});
+
+
+
 const app = express();
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
@@ -287,12 +356,7 @@ app.get("/api/products/:id", async (req, res) => {
 });
 
 // Add product
-const productStorage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/products"),
-  filename: (req, file, cb) =>
-    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}-${file.originalname}`),
-});
-const uploadProduct = multer({ storage: productStorage });
+
 
 app.post("/api/products", uploadProduct.single("image"), async (req, res) => {
   try {
@@ -326,14 +390,7 @@ app.post("/api/products", uploadProduct.single("image"), async (req, res) => {
 });
 
 // Update product
-const updateProductStorage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/products"),
-  filename: (req, file, cb) =>
-    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}-${file.originalname}`),
-});
-const uploadUpdateProduct = multer({ storage: updateProductStorage });
-
-app.put("/api/products/:id", uploadUpdateProduct.single("image"), async (req, res) => {
+app.put("/api/products/:id", uploadProduct.single("image"), async (req, res) => {
   try {
     const { id } = req.params;
     const { productName, price, description, size, material, category_id, stock, is_available } = req.body;
@@ -616,14 +673,6 @@ app.post("/api/cart/remove", requireLogin, async (req, res) => {
 });
 
 
-
-const customStorage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/custom_products"),
-  filename: (req, file, cb) =>
-    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}-${file.originalname}`),
-});
-const uploadCustom = multer({ storage: customStorage });
-
 app.post("/api/cart/add-custom", uploadCustom.single("customImage"), requireLogin, async (req, res) => {
   try {
     const { user, profile, keyColor, textColor, customText, notes } = req.body;
@@ -760,17 +809,6 @@ app.put("/api/orders/:id", async (req, res) => {
   }
 });
 
-// Multer setup for slip uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/slips/");
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  },
-});
-const upload = multer({ storage });
 
 // ----------------------
 // CREATE ORDER
