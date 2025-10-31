@@ -760,6 +760,79 @@ app.put("/api/orders/:id", async (req, res) => {
   }
 });
 
+// Multer setup for slip uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/slips/");
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  },
+});
+const upload = multer({ storage });
+
+// ----------------------
+// CREATE ORDER
+// ----------------------
+app.post("/api/orders", requireLogin, async (req: Request, res: Response) => {
+  try {
+    const {
+      orderDate,
+      orderStatus,
+      totalPrice,
+      name,
+      phone,
+      address,
+      email_id,
+      parcelStatus,
+      items, // optional: array of cart items
+    } = req.body;
+
+    const result = await pool.query(
+      `INSERT INTO main_order ("orderDate", "orderStatus", "totalPrice", name, phone, address, email_id, "parcelStatus")
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+      [orderDate, orderStatus, totalPrice, name, phone, address, email_id, parcelStatus]
+    );
+
+    const order = result.rows[0];
+
+    // Optional: handle order items table here if you have one
+    // await Promise.all(items.map(item => ...insert into order_items...))
+
+    res.json(order);
+  } catch (err) {
+    console.error("Error creating order:", err);
+    res.status(500).json({ error: "Failed to create order" });
+  }
+});
+
+// ----------------------
+// UPLOAD PAYMENT DETAIL
+// ----------------------
+app.post("/api/payment-details", requireLogin, upload.single("transferSlip"), async (req: Request, res: Response) => {
+  try {
+    const { totalPrice, paymentDate, order_id } = req.body;
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    const filePath = `/uploads/slips/${req.file.filename}`;
+
+    const result = await pool.query(
+      `INSERT INTO main_paymentdetail ("totalPrice", "transferSlip", "paymentDate", order_id)
+       VALUES ($1,$2,$3,$4) RETURNING *`,
+      [totalPrice, filePath, paymentDate, order_id]
+    );
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Error saving payment detail:", err);
+    res.status(500).json({ error: "Failed to save payment detail" });
+  }
+});
+
+
 app.get("/api/orderhistory", requireLogin, async (req: Request, res: Response) => {
   try {
     const userEmail =

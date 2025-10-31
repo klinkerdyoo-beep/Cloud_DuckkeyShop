@@ -1,9 +1,11 @@
-import Path from '../components/Path_userAddress';
-import Narbar from '../components/Narbar';
-import Profile from '../components/Profile';
-import bg1 from '../assets/img/bg1.png';
-import { useEffect, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { Link, useLocation } from 'react-router-dom'
+import { useState, useEffect } from "react";
+
+import Narbar from '../components/Narbar'
+import Path from '../components/Path'
+import bg1 from '../assets/img/bg1.png'
+import noImg from "../assets/img/no-img-rec.png";
+import type { CartItem } from "../types";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -19,10 +21,11 @@ interface Address {
   is_default: boolean;
 }
 
-export default function LoginAddAddress() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const [address, setAddress] = useState<Address>({
+export default function Shop() {
+  const [total, setTotal] = useState(0);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<number | "new">();
+  const [newAddress, setNewAddress] = useState<Address>({
     id: 0,
     name: "",
     phone: "",
@@ -34,152 +37,207 @@ export default function LoginAddAddress() {
     is_default: false,
   });
 
+  const location = useLocation();
+  const selectedItems: CartItem[] = location.state?.items ?? [];
+
+  // Calculate total
   useEffect(() => {
-    if (!id) return; // no id → add mode, skip fetch
+    const sum = selectedItems.reduce((acc, item) => acc + item.price * item.quantities, 0);
+    setTotal(sum);
+  }, [selectedItems]);
 
-    // Edit mode → fetch existing address
-    fetch(`${API_URL}/api/user/addresses/${id}`, { credentials: "include" })
+  // Fetch addresses
+  useEffect(() => {
+    fetch(`${API_URL}/api/user/addresses`, { credentials: "include" })
       .then((res) => res.json())
-      .then((data: Address) => setAddress(data))
-      .catch((err) => console.error("Error fetching address:", err));
-  }, [id]);
+      .then((data: Address[]) => {
+        setAddresses(data);
+        const defaultAddr = data.find((a) => a.is_default);
+        if (defaultAddr) setSelectedAddressId(defaultAddr.id);
+      })
+      .catch((err) => console.error("Error fetching addresses:", err));
+  }, []);
 
-  const handleSave = async () => {
-    try {
-      if (id) {
-        // EDIT existing address
-        const res = await fetch(`${API_URL}/api/user/addresses/${id}`, {
-          method: "PUT",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(address),
-        });
-        if (!res.ok) throw new Error("Failed to update address");
-      } else {
-        // ADD new address
-        const res = await fetch(`${API_URL}/api/user/addresses`, {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(address),
-        });
-        if (!res.ok) throw new Error("Failed to create address");
-      }
+  const selectedAddress =
+    selectedAddressId && selectedAddressId !== "new"
+      ? addresses.find((a) => a.id === selectedAddressId)
+      : null;
 
-      navigate("/LoginAddress"); // back to address list
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleSetDefault = async () => {
-    if (!id) return; // only for existing addresses
-    try {
-      const res = await fetch(`${API_URL}/api/user/addresses/${id}/default`, {
-        method: "PUT",
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Failed to set default");
-      setAddress({ ...address, is_default: true });
-    } catch (err) {
-      console.error(err);
+  const handleConfirmOrder = () => {
+    if (selectedAddressId === "new") {
+      console.log("Submitting new address:", newAddress);
+      // here you could POST to /api/user/addresses before confirming order
+    } else {
+      console.log("Using address:", selectedAddress);
     }
   };
 
   return (
-    <div className='text-black'>
-      <div
-        style={{ backgroundImage: `url(${bg1})` }}
-        className="bg-cover bg-fixed bg-center min-h-screen"
-      >
-        <Narbar />
-        <Path />
+    <div
+      style={{ backgroundImage: `url(${bg1})` }}
+      className="bg-cover bg-fixed bg-center min-h-screen"
+    >
+      <Path />
+      <Narbar />
 
-        <div className='flex flex-row bg-white/90 '>
-          <Profile />
-          <div className='flex flex-1 gap-4 justify-center mb-10'>
+      <div className="flex w-full p-20 gap-12">
+        {/* LEFT SIDE */}
+        <div className="bg-white/90 flex-1 ml-5 p-5 rounded-xl shadow-lg">
+          <p className="text-gray-700 text-xl border-b-2 p-2 mb-4">Delivery</p>
 
-            <div>
-              <div className='p-2 mt-5'>
-                <h2 className='text-sm mb-2'>Name</h2>
-                <input
-                  type="text"
-                  value={address.name}
-                  onChange={(e) => setAddress({ ...address, name: e.target.value })}
-                  className='w-full outline-none px-2 border-2 max-w-sm'
-                />
-              </div>
-              <div className='p-2 mt-5'>
-                <h2 className='text-sm mb-2'>Phone Number</h2>
-                <input
-                  type="text"
-                  value={address.phone}
-                  onChange={(e) => setAddress({ ...address, phone: e.target.value })}
-                  className='w-full outline-none px-2 border-2 max-w-sm'
-                />
+          {/* Address selection */}
+          <div className="mb-4">
+            <label className="block text-sm text-gray-700 mb-2">Select Address</label>
+            <select
+              value={selectedAddressId ?? ""}
+              onChange={(e) =>
+                setSelectedAddressId(
+                  e.target.value === "new" ? "new" : Number(e.target.value)
+                )
+              }
+              className="border p-2 rounded w-full max-w-sm"
+            >
+              <option value="">-- Select an address --</option>
+              {addresses.map((addr) => (
+                <option key={addr.id} value={addr.id}>
+                  {addr.name} ({addr.phone})
+                </option>
+              ))}
+              <option value="new">+ Enter new address</option>
+            </select>
+          </div>
+
+          {/* Show existing address if selected */}
+          {selectedAddress && (
+            <div className="flex border-b-2 p-3 mb-5">
+              <div className="flex-1">
+                <h2 className="font-semibold">{selectedAddress.name}</h2>
+                <p className="text-gray-500">(+66) {selectedAddress.phone}</p>
+                <p className="text-gray-500">
+                  {selectedAddress.address}, {selectedAddress.subdistrict},{" "}
+                  {selectedAddress.district}, {selectedAddress.province}{" "}
+                  {selectedAddress.postal_code}
+                </p>
               </div>
             </div>
+          )}
 
-            <div className='p-2 mt-5'>
-              <h2>Province, District, Subdistrict, Postal Code</h2>
-              <p className='text-gray-500 text-sm'>จังหวัด, เขต/อำเภอ, แขวง/ตำบล, รหัสไปรษณีย์</p>
-
-              <div className="flex flex-col gap-4 w-64">
-                {["province", "district", "subdistrict", "postal_code"].map((field) => (
-                  <div key={field} className="flex flex-col">
-                    <label className="text-sm text-gray-500">{field.replace("_", " ").toUpperCase()}</label>
-                    <input
-                      type="text"
-                      value={(address as any)[field]}
-                      onChange={(e) => setAddress({ ...address, [field]: e.target.value })}
-                      className="border p-2 rounded text-sm"
-                    />
-                  </div>
-                ))}
+          {/* New address form */}
+          {selectedAddressId === "new" && (
+            <div>
+              <div className="p-2 mt-5">
+                <h2 className="text-sm mb-2">Name</h2>
+                <input
+                  type="text"
+                  value={newAddress.name}
+                  onChange={(e) => setNewAddress({ ...newAddress, name: e.target.value })}
+                  className="w-full outline-none px-2 border-2 max-w-sm"
+                />
               </div>
 
-              <div className="flex flex-col gap-2 mt-5">
-                <label className="text-sm text-black">House Number, Alley, Village, Street</label>
-                <textarea
-                  rows={3}
-                  value={address.address}
-                  onChange={(e) => setAddress({ ...address, address: e.target.value })}
-                  className="border-2 p-2 rounded text-sm resize-none max-w-sm"
+              <div className="p-2 mt-5">
+                <h2 className="text-sm mb-2">Phone Number</h2>
+                <input
+                  type="text"
+                  value={newAddress.phone}
+                  onChange={(e) => setNewAddress({ ...newAddress, phone: e.target.value })}
+                  className="w-full outline-none px-2 border-2 max-w-sm"
                 />
+              </div>
 
-                <div className='flex flex-row gap-2 text-sm mt-2'>
-                  <button
-                    onClick={() => setAddress({ ...address, name: "", phone: "", province: "", district: "", subdistrict: "", postal_code: "", address: "" })}
-                    className='rounded-xl border-3 border-red-700 hover:border-red-500 text-red-700 p-2'
-                  >
-                    Clear Address
-                  </button>
+              <div className="mt-5 ml-5 mb-5">
+                <h2>Province, District, Subdistrict, Postal Code</h2>
+                <div className="flex flex-col gap-4 w-64">
+                  {["province", "district", "subdistrict", "postal_code"].map((field) => (
+                    <div key={field} className="flex flex-col">
+                      <label className="text-sm text-gray-500">
+                        {field.replace("_", " ").toUpperCase()}
+                      </label>
+                      <input
+                        type="text"
+                        value={(newAddress as any)[field]}
+                        onChange={(e) =>
+                          setNewAddress({ ...newAddress, [field]: e.target.value })
+                        }
+                        className="border p-2 rounded text-sm"
+                      />
+                    </div>
+                  ))}
+                </div>
 
-                  <button
-                    onClick={handleSave}
-                    className='rounded-xl text-white bg-green-600 hover:bg-green-700 p-2'
-                  >
-                    {id ? "Update" : "Add"} Address
-                  </button>
-
-                  {id && !address.is_default && (
-                    <button
-                      onClick={handleSetDefault}
-                      className='rounded-xl border-2 border-red-400 text-red-400 p-2'
-                    >
-                      Set as Default
-                    </button>
-                  )}
-
-                  <Link to="/LoginAddress"
-                    className='rounded-xl border-2 border-gray-400 hover:border-gray-600 text-gray-400 p-2'
-                  >
-                    Cancel
-                  </Link>
+                <div className="flex flex-col gap-2 mt-5">
+                  <label className="text-sm text-black">
+                    House Number, Alley, Village, Street
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={newAddress.address}
+                    onChange={(e) =>
+                      setNewAddress({ ...newAddress, address: e.target.value })
+                    }
+                    className="border-2 p-2 rounded text-sm resize-none max-w-sm"
+                  />
                 </div>
               </div>
             </div>
+          )}
 
+          {/* Contact + Payment + Confirm */}
+          <div className="p-2">
+            <h2 className="text-2xl">Contact</h2>
+            <div className="flex flex-col px-2">
+              <label htmlFor="email" className="text-sm">Email</label>
+              <input id="email" type="text" name="email" className="border-2 max-w-sm" />
+            </div>
+          </div>
+
+          <div className="mt-6 text-center">
+            <button
+              onClick={handleConfirmOrder}
+              className="bg-red-700 text-white px-6 py-2 rounded-xl hover:bg-red-800 transition"
+            >
+              Confirm Order
+            </button>
+          </div>
+        </div>
+
+        {/* RIGHT SIDE - Order Summary */}
+        <div className="bg-white/90 w-[400px] max-h-max p-5 rounded-xl shadow-lg">
+          <h2 className="text-2xl font-semibold border-b-2 pb-2 mb-4">Your Order</h2>
+          {selectedItems.length === 0 ? (
+            <p>No items selected.</p>
+          ) : (
+            selectedItems.map((item: any) => (
+              <div
+                key={item.product_id}
+                className="flex items-center justify-between border-b pb-3 mb-3"
+              >
+                <div className="flex items-center gap-3">
+                  <img
+                    className="w-16 h-16 object-cover rounded-md"
+                    src={item.imgURL ? `${API_URL}${item.imgURL}` : noImg}
+                    alt={item.productName}
+                  />
+                  <div>
+                    <h2 className="text-red-700 font-semibold">
+                      {item.productName}
+                      {item.customValue && `: ${item.customValue}`}
+                    </h2>
+                    <p className="text-gray-500 text-sm">Qty: {item.quantities}</p>
+                  </div>
+                </div>
+                <p className="font-semibold">
+                  ฿{(item.price * item.quantities).toLocaleString("en-US")}
+                </p>
+              </div>
+            ))
+          )}
+
+          <div className="pt-3 space-y-2">
+            <div className="flex justify-between font-semibold text-lg pt-2">
+              <p>Total</p>
+              <p>฿{total.toLocaleString("en-US")}</p>
+            </div>
           </div>
         </div>
       </div>
