@@ -772,10 +772,10 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// ----------------------
-// CREATE ORDER
-// ----------------------
+
+// CREATE ORDER + ORDER ITEMS + CLEAR CART
 app.post("/api/orders", requireLogin, async (req: Request, res: Response) => {
+  const client = await pool.connect();
   try {
     const {
       orderDate,
@@ -786,32 +786,75 @@ app.post("/api/orders", requireLogin, async (req: Request, res: Response) => {
       address,
       email_id,
       parcelStatus,
-      items, // optional: array of cart items
+      items, // array of selected cart items
     } = req.body;
-    if (!email_id) {
-      return res.status(401).json({ message: "Not logged in" });
-    }
-    const result = await pool.query(
-      `INSERT INTO main_order ("orderDate", "orderStatus", "totalPrice", name, phone, address, email_id, "parcelStatus")
+
+    if (!email_id) return res.status(401).json({ message: "Not logged in" });
+
+    await client.query("BEGIN");
+
+    // Insert order
+    const orderResult = await client.query(
+      `INSERT INTO main_order 
+        ("orderDate", "orderStatus", "totalPrice", name, phone, address, email_id, "parcelStatus")
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
       [orderDate, orderStatus, totalPrice, name, phone, address, email_id, parcelStatus]
     );
 
-    const order = result.rows[0];
+    const order = orderResult.rows[0];
+    const orderId = order.id;
 
-    // Optional: handle order items table here if you have one
-    // await Promise.all(items.map(item => ...insert into order_items...))
+    // Insert order items
+    if (items && items.length > 0) {
+      for (const item of items) {
+        const productId = item.product_id;
+        const customProductId = item.custom_product_id || null;
+        const optionId = item.option_id || null;
+
+        await client.query(
+          `INSERT INTO main_orderitem 
+            ("customValue","quantities","eachTotalPrice","productName","order_id","product_id","option_id","custom_product_id")
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+          [
+            item.customValue || "",
+            item.quantities,
+            item.price * item.quantities,
+            item.productName,
+            orderId,
+            productId,
+            optionId,
+            customProductId,
+          ]
+        );
+      }
+    }
+
+    // Delete checked items from main_customercart
+    const cartIds = items
+      .filter((i: any) => i.id) // ensure cart_id exists
+      .map((i: any) => i.id);
+
+    if (cartIds.length > 0) {
+      await client.query(
+        `DELETE FROM main_customercart WHERE id = ANY($1)`,
+        [cartIds]
+      );
+    }
+
+    await client.query("COMMIT");
 
     res.json(order);
   } catch (err) {
+    await client.query("ROLLBACK");
     console.error("Error creating order:", err);
     res.status(500).json({ error: "Failed to create order" });
+  } finally {
+    client.release();
   }
 });
 
-// ----------------------
+
 // UPLOAD PAYMENT DETAIL
-// ----------------------
 app.post("/api/payment-details", requireLogin, upload.single("transferSlip"), async (req: Request, res: Response) => {
   try {
     const { totalPrice, paymentDate, order_id } = req.body;
@@ -821,7 +864,7 @@ app.post("/api/payment-details", requireLogin, upload.single("transferSlip"), as
     const filePath = `/uploads/slips/${req.file.filename}`;
 
     const result = await pool.query(
-      `INSERT INTO main_paymentdetail (totalPrice, transferSlip, paymentDate, order_id)
+      `INSERT INTO main_paymentdetail ("totalPrice", "transferSlip", "paymentDate", order_id)
       VALUES ($1,$2,$3,$4) RETURNING *`,
       [totalPrice, filePath, paymentDate, Number(order_id)]
     );
