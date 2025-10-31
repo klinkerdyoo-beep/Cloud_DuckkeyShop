@@ -704,6 +704,8 @@ app.get("/api/orders/:id", async (req, res) => {
           o.id,
           o.name,
           o.email_id,
+          o.phone,
+          o.address,
           o."orderStatus",
           o."orderDate",
           json_agg(
@@ -737,6 +739,7 @@ app.get("/api/orders/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch this order" });
   }
 });
+
 
 
 

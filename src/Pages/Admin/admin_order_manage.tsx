@@ -24,6 +24,8 @@ interface OrderFull {
   transferSlip?: string;
   items: OrderItem[];
   status?: string;
+  address: string;
+  phone: string;
 }
 
 export default function AdminOrderManage() {
@@ -84,67 +86,6 @@ export default function AdminOrderManage() {
             </h1>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Customer Info */}
-              <div>
-                <label className="block mb-1 font-medium">ชื่อผู้สั่งซื้อ</label>
-                <input
-                  type="text"
-                  value={order.name}
-                  readOnly
-                  className="w-full px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-800 dark:text-gray-300"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-1 font-medium">อีเมล</label>
-                <input
-                  type="text"
-                  value={order.email_id}
-                  readOnly
-                  className="w-full px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-800 dark:text-gray-300"
-                />
-              </div>
-
-              {/* Order Info */}
-              <div>
-                <label className="block mb-1 font-medium">รายการสินค้า</label>
-                <div className="p-2 border rounded-md bg-gray-100 dark:bg-gray-800 dark:text-gray-300 space-y-1">
-                  {order.items.map((item, idx) => {
-                    if (item.custom_product_id && item.customValue) {
-                      // Split the customValue
-                      const [name, keyColor, textColor, size] = item.customValue.split("_");
-                      return (
-                        <div key={idx} className="flex flex-col">
-                          <span>
-                            <strong>Custom:</strong> {name} — ขนาด: {size}
-                          </span>
-                          <span className="flex items-center gap-2 text-sm">
-                            <span>Key Color: </span>
-                            <span
-                              style={{ backgroundColor: keyColor }}
-                              className="inline-block w-4 h-4 border"
-                            />
-                            <span>Text Color: </span>
-                            <span
-                              style={{ backgroundColor: textColor }}
-                              className="inline-block w-4 h-4 border"
-                            />
-                          </span>
-                          <span>จำนวน: {item.quantities}</span>
-                        </div>
-                      );
-                    } else {
-                      return (
-                        <p key={idx}>
-                          <strong>{item.productName}</strong> — จำนวน: {item.quantities}
-                        </p>
-                      );
-                    }
-                  })}
-                </div>
-              </div>
-
-
               <div>
                 <label className="block mb-1 font-medium">ราคารวม</label>
                 <input
@@ -192,7 +133,7 @@ export default function AdminOrderManage() {
                   <p className="text-sm text-gray-500 italic">ไม่มีหลักฐานการโอน</p>
                 )}
               </div>
-
+  
               {/* Buttons */}
               <div className="flex justify-between pt-4">
                 <button
@@ -208,6 +149,85 @@ export default function AdminOrderManage() {
                 >
                   บันทึกการเปลี่ยนแปลง
                 </button>
+              </div>
+
+                {/* Order Info */}
+              <div>
+                <label className="block mb-1 font-medium">รายการสินค้า</label>
+                <div className="p-2 border rounded-md bg-gray-100 dark:bg-gray-800 dark:text-gray-300 space-y-1">
+                  {order.items.map((item, idx) => {
+                    if (item.custom_product_id && item.customValue) {
+                      // Split the customValue
+                      const [name, keyColor, textColor, size] = item.customValue.split("_");
+                      return (
+                        <div key={idx} className="flex flex-col">
+                          <span>
+                            <strong>Custom:</strong> {name} — ขนาด: {size}
+                          </span>
+                          <span className="flex items-center gap-2 text-sm">
+                            <span>Key Color: </span>
+                            <span
+                              style={{ backgroundColor: keyColor }}
+                              className="inline-block w-4 h-4 border"
+                            />
+                            <span>Text Color: </span>
+                            <span
+                              style={{ backgroundColor: textColor }}
+                              className="inline-block w-4 h-4 border"
+                            />
+                          </span>
+                          <span>จำนวน: {item.quantities}</span>
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <p key={idx}>
+                          <strong>{item.productName}</strong> — จำนวน: {item.quantities}
+                        </p>
+                      );
+                    }
+                  })}
+                </div>
+              </div>
+
+              {/* Customer Info */}
+              <div>
+                <label className="block mb-1 font-medium">ชื่อผู้สั่งซื้อ</label>
+                <input
+                  type="text"
+                  value={order.name}
+                  readOnly
+                  className="w-full px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-800 dark:text-gray-300"
+                />
+              </div>
+
+              <div>
+                <label className="block mb-1 font-medium">อีเมล</label>
+                <input
+                  type="text"
+                  value={order.email_id}
+                  readOnly
+                  className="w-full px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-800 dark:text-gray-300"
+                />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium">เบอร์โทรศัพท์</label>
+                <input
+                  type="text"
+                  value={order.phone}
+                  readOnly
+                  className="w-full px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-800 dark:text-gray-300"
+                />
+              </div>
+
+              <div>
+                <label className="block mb-1 font-medium">ที่อยู่จัดส่ง</label>
+                <textarea
+                  value={order.address}
+                  readOnly
+                  className="w-full px-4 py-2 border rounded-md bg-gray-100 dark:bg-gray-800 dark:text-gray-300 resize-none"
+                  rows={3}
+                />
               </div>
             </form>
           </div>
