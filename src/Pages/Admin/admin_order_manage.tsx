@@ -150,7 +150,10 @@ export default function AdminOrderManage() {
                   บันทึกการเปลี่ยนแปลง
                 </button>
               </div>
-
+              <br/><br/>
+            <h1 className="text-3xl font-bold text-text-light dark:text-text-dark mb-6">
+              ข้อมูลการสั่งซื้อ
+            </h1>
                 {/* Order Info */}
               <div>
                 <label className="block mb-1 font-medium">รายการสินค้า</label>
