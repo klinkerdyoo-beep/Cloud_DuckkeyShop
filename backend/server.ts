@@ -7,6 +7,7 @@ import path from "path";
 import fs from "fs";
 import { S3Client } from "@aws-sdk/client-s3";
 import multerS3 from "multer-s3";
+import bcrypt from "bcrypt";
 
 dotenv.config();
 const s3 = new S3Client({
@@ -168,19 +169,24 @@ app.get('/api/users', async (req, res) => {
 // sign up
 app.post('/api/signup', async (req, res) => {
     const { username, name, email, password, phone, gender, dob, profileImage } = req.body;
+
     try {
-        const query = `
-            INSERT INTO main_userinfo (username, name, email, password, phone, gender, dob, "profileImage")
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-            RETURNING *;
-        `;
-        const values = [username, name, email, password, phone, gender, dob, profileImage];
-        const result = await pool.query(query, values);
-        req.session.user = email;
-        res.json({ message: 'Signup successful', user: result.rows[0] });
+      // Hash the password
+      const hashedPassword = await bcrypt.hash(password, 10); // 10 salt rounds
+
+      const query = `
+        INSERT INTO main_userinfo (username, name, email, password, phone, gender, dob, "profileImage")
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING *;
+      `;
+      const values = [username, name, email, hashedPassword, phone, gender, dob, profileImage];
+      const result = await pool.query(query, values);
+
+      req.session.user = email;
+      res.json({ message: 'Signup successful', user: result.rows[0] });
     } catch (err: any) {
-        console.error(err);
-        res.status(400).json({ message: err.detail || 'Signup failed' });
+      console.error(err);
+      res.status(400).json({ message: err.detail || 'Signup failed' });
     }
 });
 
@@ -189,8 +195,8 @@ app.post('/api/login', async (req, res) => {
 
   try {
     const result = await pool.query(
-      'SELECT * FROM main_userinfo WHERE email=$1 AND password=$2',
-      [email, password]
+      'SELECT * FROM main_userinfo WHERE email=$1',
+      [email]
     );
 
     if (result.rows.length === 0) {
@@ -198,14 +204,20 @@ app.post('/api/login', async (req, res) => {
     }
 
     const user = result.rows[0];
-    delete user.password;
 
-    req.session.user = user; // store user object in session
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    delete user.password; // don't send password to frontend
+    req.session.user = user; 
     res.json({ message: 'Login successful', user });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Internal server error' });
   }
+
 });
 
 app.post('/api/logout', (req, res) => {
@@ -240,12 +252,15 @@ app.put("/api/update-user", requireLogin, async (req, res) => {
     // Only check password if user wants to change it
     let finalPassword = dbUser.password;
     if (newPassword) {
-      if (!currentPassword) {
-        return res.status(400).json({ message: "Current password required to change password" });
+      if (newPassword) {
+        if (!currentPassword) return res.status(400).json({ message: "Current password required" });
+        
+        const match = await bcrypt.compare(currentPassword, dbUser.password);
+        if (!match) return res.status(400).json({ message: "Current password is incorrect" });
+        
+        finalPassword = await bcrypt.hash(newPassword, 10); // hash new password
       }
-      if (dbUser.password !== currentPassword) {
-        return res.status(400).json({ message: "Current password is incorrect" });
-      }
+
       finalPassword = newPassword;
     }
 
@@ -273,9 +288,30 @@ app.put("/api/update-user", requireLogin, async (req, res) => {
   }
 });
 
+app.get("/api/check-admin", (req, res) => {
+  const sessionUser = req.session.user;
+  const userEmail = typeof sessionUser === "string" ? sessionUser : sessionUser?.email;
+
+  if (!userEmail) {
+    return res.status(401).json({ message: "Not logged in" });
+  }
+
+  pool.query(
+    'SELECT * FROM main_providerlist WHERE email_id = $1',
+    [userEmail]
+  )
+  .then(result => {
+    const isAdmin = result.rows.length > 0;
+    res.json({ isAdmin });
+  })
+  .catch(err => {
+    console.error("Check admin error:", err);
+    res.status(500).json({ message: "Internal server error" });
+  });
+});
 
 
-
+// --------------PRODUCT---------------
 
 const query_products = `
       SELECT 
@@ -352,6 +388,25 @@ app.get("/api/products/:id", async (req, res) => {
   } catch (err) {
     console.error("Database error:", err);
     res.status(500).json({ error: "Failed to fetch product" });
+  }
+});
+
+app.get("/api/products/search/:query", async (req, res) => {
+  try {
+    const { query } = req.params;
+    const result = await pool.query(
+      `
+      SELECT "productID", "productName"
+      FROM main_productdetail
+      WHERE "productName" ILIKE $1
+      LIMIT 10
+      `,
+      [`%${query}%`]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Search error:", err);
+    res.status(500).json({ error: "Failed to search products" });
   }
 });
 
@@ -474,8 +529,9 @@ app.delete("/api/products/:id", async (req, res) => {
   }
 });
 
+// --------------PRODUCT---------------
+// --------------categories---------------
 
-// categories
 app.get("/api/categories", async (req, res) => {
   try {
     const result = await pool.query(`
@@ -547,8 +603,8 @@ app.delete("/api/categories/:id", async (req, res) => {
   }
 });
 
-
-
+// --------------categories---------------
+// --------------cart---------------
 // add cart
 app.post("/api/cart/add", requireLogin, async (req, res)=> {
   try {
