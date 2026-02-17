@@ -10,25 +10,29 @@
 ---
 
 ### 🛠 Tech Stack
+<p>
 
-<p align="center">
   <!-- Frontend -->
   <img height="45" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg"/>
   <img height="45" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg"/>
   <img height="45" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg"/>
   <img height="45" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vitejs/vitejs-original.svg"/>
-  <img height="45" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/tailwindcss/tailwindcss-plain.svg"/>
   <img height="45" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg"/>
   <img height="45" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/eslint/eslint-original.svg"/>
+
+  <!-- Tailwind (ใช้ simple-icons แทน) -->
+  <img height="45" src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tailwindcss.svg"/>
 
   <!-- Backend -->
   <img height="45" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg"/>
 
   <!-- Deployment -->
   <img height="45" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nginx/nginx-original.svg"/>
-  <img height="45" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/pm2/pm2-original.svg"/>
-</p>
 
+  <!-- PM2 (ใช้ simple-icons) -->
+  <img height="45" src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/pm2.svg"/>
+
+</p>
 ---
 
 ### Cloud Architecture
