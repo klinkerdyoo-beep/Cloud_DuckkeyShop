@@ -3,8 +3,7 @@
 โครงงานนี้จัดทำขึ้นจากความต้องการของผู้จัดทำ ที่ต้องการสร้างเว็บไซต์สำหรับขายสินค้างานแฮนด์เมด โดยมีเป้าหมายเพื่อให้เว็บไซต์มีหน้าตาที่สวยงามและดึงดูดความสนใจของลูกค้า อีกทั้งต้องการเพิ่มประสิทธิภาพในการสื่อสารกับลูกค้า ด้วยการเพิ่มฟังก์ชันที่ช่วยลดเวลาในการตอบคำถามซ้ำ ๆ เช่น ระบบแสดงข้อมูลสินค้าอย่างละเอียด แบบฟอร์มสั่งซื้อที่ใช้งานง่าย ซึ่งจะช่วยให้ผู้ขายสามารถมุ่งเน้นไปที่การผลิตสินค้าได้มากขึ้น 
 
 ### Use Case Diagram
-<img width="1920" height="1080" alt="Duckkey_shop_ความคืบหน้า" src="https://github.com/user-attachments/assets/b8923e88-0ea2-4f98-a75d-c7abc3320e86" />
-
+<img width="658" height="833" alt="Duckkey_shop_use_case" src="https://github.com/user-attachments/assets/ddf7a89b-45fa-4f78-8901-8978e004d163" />
 
 ### เทคโนโลยีที่เกี่ยวข้อง
 **Frontend**
@@ -22,6 +21,19 @@
 
 ![NGINX](https://img.shields.io/badge/NGINX-009639?style=flat&logo=nginx&logoColor=white)
 ![PM2](https://img.shields.io/badge/PM2-2B037A?style=flat&logo=pm2&logoColor=white)
+
+---
+
+### 🛠 Tech Stack
+
+<p align="center">
+  <img height="50" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg"/>
+  <img height="50" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg"/>
+  <img height="50" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vitejs/vitejs-original.svg"/>
+  <img height="50" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/tailwindcss/tailwindcss-plain.svg"/>
+  <img height="50" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg"/>
+  <img height="50" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nginx/nginx-original.svg"/>
+</p>
 
 ### Cloud Architecture
 <img width="1642" height="798" alt="Cloud-Architecture" src="https://github.com/user-attachments/assets/d067f661-4bce-494d-b792-8b2ce7545c88" />
