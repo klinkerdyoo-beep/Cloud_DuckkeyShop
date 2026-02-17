@@ -9,17 +9,27 @@
 <img width="1642" height="798" alt="Use-Case-Diagram" src="https://github.com/user-attachments/assets/d067f661-4bce-494d-b792-8b2ce7545c88" />
 
 ### เทคโนโลยีที่เกี่ยวข้อง
-Typescript
-RESTful API
-Vite
-React
-Tailwind CSS
-eslint
-Postgresql
-JavaScript
-CSS
-NGINX
-PM2
+<details>
+<summary>🖥 Technology Stack</summary>
+
+### 🎨 Frontend
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- JavaScript
+- CSS
+- ESLint
+
+### ⚙ Backend
+- RESTful API
+- PostgreSQL
+
+### 🚀 Deployment
+- NGINX
+- PM2
+
+</details>
 
 ### Cloud Architecture
 <img width="1642" height="798" alt="Cloud-Architecture" src="https://github.com/user-attachments/assets/d067f661-4bce-494d-b792-8b2ce7545c88" />
